@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=Candara:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+body {
+  font-family: 'Candara', system-ui, sans-serif;
+}
