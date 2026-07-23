@@ -77,27 +77,46 @@ export default function ReminderSettings() {
     }
   }
 
-  async function saveSettings() {
-    try {
-      setSaving(true);
+async function saveSettings() {
+  try {
+    setSaving(true);
 
-      await api.patch(
-        "/settings/reminders",
-        form
-      );
+    // Explicitly whitelist what gets sent — never send `form` wholesale.
+    // This guarantees stray fields (like the `_id` Mongoose auto-adds to
+    // subdocuments) can never leak into the request, even if something
+    // else gets added to `form` state later without us noticing.
+    const payload: ReminderForm = {
+      beforeDueDate: form.beforeDueDate,
+      beforeDays: form.beforeDays,
+      beforeSubject: form.beforeSubject,
+      beforeMessage: form.beforeMessage,
 
-      alert("Reminder settings updated.");
-    } catch (err: any) {
-      console.error(err);
+      onDueDate: form.onDueDate,
+      dueTodaySubject: form.dueTodaySubject,
+      dueTodayMessage: form.dueTodayMessage,
 
-      alert(
-        err.response?.data?.message ??
-          "Failed to save settings."
-      );
-    } finally {
-      setSaving(false);
-    }
+      afterDueDate: form.afterDueDate,
+      afterDays: form.afterDays,
+      overdueSubject: form.overdueSubject,
+      overdueMessage: form.overdueMessage,
+
+      signature: form.signature,
+    };
+
+    await api.patch("/settings/reminders", payload);
+
+    alert("Reminder settings updated.");
+  } catch (err: any) {
+    console.error(err);
+
+    alert(
+      err.response?.data?.message ??
+        "Failed to save settings."
+    );
+  } finally {
+    setSaving(false);
   }
+}
 
   function updateField<K extends keyof ReminderForm>(
     field: K,
