@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-
+import PayInvoiceButton from "../components/PayInvoiceButton";
 import PdfPreview from "../components/review/PdfPreview";
 import EmailComposer from "../components/review/EmailComposer";
 import api from "../api/axios";
@@ -217,28 +217,28 @@ ${finalSignature}`;
   }
 
   return (
-  <div className="min-h-screen bg-[#FEF9EE]">
+  <div className="min-h-screen bg-[#FDF8F2]">
 
     {/* Navbar */}
 
-    <nav className="bg-white border-b border-[#E6DCC7]">
+    <nav className="bg-white border-b border-[#EFEAE0]">
 
       <div className="max-w-[1700px] mx-auto flex items-center gap-4 px-8 py-5">
 
         <button
           onClick={() => navigate("/view-invoices")}
-          className="rounded-xl p-2 hover:bg-[#FEF9EE]"
+          className="rounded-xl p-2 hover:bg-[#FDF8F2]"
         >
           <ArrowLeft />
         </button>
 
         <div>
 
-          <h1 className="text-3xl font-bold text-[#1E2118]">
+          <h1 className="text-3xl font-bold text-[#0F1B3D]">
             Review & Send
           </h1>
 
-          <p className="text-[#4B672D]">
+          <p className="text-[#000000]">
             Review extracted information before sending.
           </p>
 
@@ -256,7 +256,7 @@ ${finalSignature}`;
           </div>
         )}
         {statusMessage && (
-          <div className="rounded-2xl border border-[#E6DCC7] bg-white px-5 py-3 text-sm font-medium text-[#4B672D]">
+          <div className="rounded-2xl border border-[#EFEAE0] bg-white px-5 py-3 text-sm font-medium text-[#1E56CD]">
             {statusMessage}
           </div>
         )}
@@ -283,6 +283,8 @@ ${finalSignature}`;
           onSchedule={handleSchedule}
           submitting={submitting}
         />
+
+        {invoice && <PayInvoiceButton invoiceId={invoice._id} />}
 
       </div>
 

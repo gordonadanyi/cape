@@ -1,6 +1,6 @@
 export default function StorageSettings() {
   return (
-    <div className="rounded-[32px] border border-[#E6DCC7] bg-white p-8 shadow-sm">
+    <div className="rounded-[32px] border border-[#EFEAE0] bg-white p-8 shadow-sm">
 
       <h2 className="text-2xl font-semibold mb-8">
         Storage Usage

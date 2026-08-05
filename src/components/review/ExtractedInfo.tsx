@@ -16,7 +16,7 @@ export default function ExtractedInfo({
 
         <div className="mb-6">
 
-            <label className="text-sm font-semibold text-[#4B672D]">
+            <label className="text-sm font-semibold text-[#1E56CD]">
 
                 {label}
 

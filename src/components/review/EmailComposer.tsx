@@ -52,17 +52,17 @@ export default function EmailComposer({
   const [showSchedule, setShowSchedule] = useState(false);
 
   return (
-    <div className="rounded-[32px] border border-[#E6DCC7] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-[32px] border border-[#EFEAE0] bg-white shadow-sm overflow-hidden">
 
       {/* Header */}
 
-      <div className="border-b border-[#E6DCC7] px-8 py-6">
+      <div className="border-b border-[#EFEAE0] px-8 py-6">
 
-        <h2 className="text-2xl font-semibold text-[#1E2118]">
+        <h2 className="text-2xl font-semibold text-[#0F1B3D]">
           Compose Email
         </h2>
 
-        <p className="mt-1 text-[#4B672D]">
+        <p className="mt-1 text-[#000000]">
           Review before sending to your client.
         </p>
 
@@ -74,7 +74,7 @@ export default function EmailComposer({
 
         <div>
 
-          <label className="text-sm font-semibold text-[#4B672D]">
+          <label className="text-sm font-semibold text-[#000000]">
             To
           </label>
 
@@ -87,7 +87,7 @@ export default function EmailComposer({
               }))
             }
             placeholder="customer@email.com"
-            className="mt-2 w-full rounded-xl border border-[#E6DCC7] p-4 outline-none focus:border-[#4B672D]"
+            className="mt-2 w-full rounded-xl border border-[#EFEAE0] p-4 outline-none focus:border-[#1E56CD]"
           />
 
           {!form.customerEmail && (
@@ -108,7 +108,7 @@ export default function EmailComposer({
 
         <div>
 
-          <label className="text-sm font-semibold text-[#4B672D]">
+          <label className="text-sm font-semibold text-[#000000]">
             Subject
           </label>
 
@@ -120,7 +120,7 @@ export default function EmailComposer({
                 subjectLine:e.target.value
               }))
             }
-            className="mt-2 w-full rounded-xl border border-[#E6DCC7] p-4 outline-none focus:border-[#4B672D]"
+            className="mt-2 w-full rounded-xl border border-[#EFEAE0] p-4 outline-none focus:border-[#1E56CD]"
           />
 
         </div>
@@ -129,11 +129,11 @@ export default function EmailComposer({
 
 <div>
 
-  <label className="text-sm font-semibold text-[#4B672D]">
+  <label className="text-sm font-semibold text-[#000000]">
     Message
   </label>
 
-  <div className="mt-2 overflow-hidden rounded-xl border border-[#E6DCC7]">
+  <div className="mt-2 overflow-hidden rounded-xl border border-[#EFEAE0]">
 
     {/* Editable Message */}
 
@@ -151,13 +151,13 @@ export default function EmailComposer({
 
     {/* Read-only Company Footer */}
 
-    <div className="border-t border-[#EFE7D6] bg-[#FEF9EE] px-5 py-4">
+    <div className="border-t border-[#EFE7D6] bg-[#FDF8F2] px-5 py-4">
 
       {/* <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#7A7A7A]">
         Company Signature (Auto Generated)
       </p> */}
 
-      <p className="font-semibold text-[#1E2118]">
+      <p className="font-semibold text-[#0F1B3D]">
         {branding?.companyName || "Company Name"}
       </p>
 
@@ -168,7 +168,7 @@ export default function EmailComposer({
       )}
 
       {branding?.businessAddress && (
-        <p className="mt-2 whitespace-pre-line text-[#4B672D]">
+        <p className="mt-2 whitespace-pre-line text-[#000000]">
           📍 {branding.businessAddress}
         </p>
       )}
@@ -186,20 +186,20 @@ export default function EmailComposer({
 
 {/* <div>
 
-  <div className="mt-2 rounded-xl border border-[#E6DCC7] bg-[#FEF9EE] p-5">
+  <div className="mt-2 rounded-xl border border-[#EFEAE0] bg-[#FDF8F2] p-5">
 
-    <p className="font-semibold text-[#1E2118]">
+    <p className="font-semibold text-[#0F1B3D]">
       {branding?.companyName || "Company Name"}
     </p>
 
     {branding?.website && (
-      <p className="mt-2 text-[#4B672D]">
+      <p className="mt-2 text-[#1E56CD]">
         🌐 {branding.website}
       </p>
     )}
 
     {branding?.businessAddress && (
-      <p className="mt-2 whitespace-pre-line text-[#4B672D]">
+      <p className="mt-2 whitespace-pre-line text-[#1E56CD]">
         📍 {branding.businessAddress}
       </p>
     )}
@@ -208,14 +208,14 @@ export default function EmailComposer({
 
 </div> */}
 
-      <div className="flex items-center justify-between border-t border-[#E6DCC7] bg-[#FEF9EE] px-8 py-5">
+      <div className="flex items-center justify-between border-t border-[#EFEAE0] bg-[#FDF8F2] px-8 py-5">
 
         <div className="relative flex">
 
           <button
             onClick={onSend}
             disabled={submitting}
-            className="rounded-l-full bg-[#4B672D] px-8 py-3 font-semibold text-white hover:bg-[#3E5825] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-l-full bg-[#1E56CD] px-8 py-3 font-semibold text-white hover:bg-[#17439E] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div className="flex items-center gap-2">
 
@@ -230,20 +230,20 @@ export default function EmailComposer({
           <button
             onClick={()=>setShowSchedule(!showSchedule)}
             disabled={submitting}
-            className="rounded-r-full border-l border-white bg-[#4B672D] px-4 text-white hover:bg-[#3E5825] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-r-full border-l border-white bg-[#1E56CD] px-4 text-white hover:bg-[#17439E] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <ChevronDown size={18}/>
           </button>
 
           {showSchedule && (
 
-            <div className="absolute bottom-16 left-0 w-80 rounded-2xl border border-[#E6DCC7] bg-white p-5 shadow-xl">
+            <div className="absolute bottom-16 left-0 w-80 rounded-2xl border border-[#EFEAE0] bg-white p-5 shadow-xl">
 
               <div className="flex items-center gap-2 mb-4">
 
                 <Clock3
                   size={18}
-                  className="text-[#4B672D]"
+                  className="text-[#1E56CD]"
                 />
 
                 <h3 className="font-semibold">
@@ -261,13 +261,13 @@ export default function EmailComposer({
                     sendAt:e.target.value
                   }))
                 }
-                className="w-full rounded-xl border border-[#E6DCC7] p-3"
+                className="w-full rounded-xl border border-[#EFEAE0] p-3"
               />
 
               <button
                 onClick={onSchedule}
                 disabled={submitting}
-                className="mt-4 w-full rounded-xl bg-[#4B672D] py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 w-full rounded-xl bg-[#1E56CD] py-3 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Scheduling…" : "Schedule"}
               </button>
@@ -278,7 +278,7 @@ export default function EmailComposer({
 
         </div>
 
-        <p className="text-sm text-[#4B672D]">
+        <p className="text-sm text-[#000000]">
 
           Invoice PDF will be attached automatically.
 

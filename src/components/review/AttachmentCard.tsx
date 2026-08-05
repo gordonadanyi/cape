@@ -27,14 +27,14 @@ export default function AttachmentCard({
   }
 
   return (
-    <div className="rounded-[28px] border border-[#E6DCC7] bg-white p-6">
+    <div className="rounded-[28px] border border-[#EFEAE0] bg-white p-6">
 
       <div className="flex items-center gap-4">
 
         <div className="rounded-2xl bg-[#DCE9A8] p-4">
 
           <FileText
-            className="text-[#4B672D]"
+            className="text-[#1E56CD]"
             size={32}
           />
 
@@ -48,7 +48,7 @@ export default function AttachmentCard({
 
           </h3>
 
-          <p className="text-sm text-[#4B672D]">
+          <p className="text-sm text-[#1E56CD]">
 
             PDF Document
 
@@ -62,7 +62,7 @@ export default function AttachmentCard({
 
         <button
           onClick={previewInvoice}
-          className="flex items-center gap-2 rounded-full border border-[#E6DCC7] px-5 py-2 hover:bg-[#FEF9EE]"
+          className="flex items-center gap-2 rounded-xl border border-[#EFEAE0] px-5 py-2 hover:bg-[#FDF8F2]"
         >
           <Eye size={18} />
 
@@ -71,7 +71,7 @@ export default function AttachmentCard({
 
         <button
           onClick={downloadInvoice}
-          className="flex items-center gap-2 rounded-full bg-[#4B672D] px-5 py-2 text-white"
+          className="flex items-center gap-2 rounded-xl bg-[#1E56CD] px-5 py-2 text-white"
         >
           <Download size={18} />
 

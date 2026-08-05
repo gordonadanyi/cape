@@ -47,7 +47,7 @@ if (form.currentPassword == form.newPassword){
   }
 
   return (
-    <div className="rounded-[32px] border border-[#E6DCC7] bg-white p-8 shadow-sm">
+    <div className="rounded-[32px] border border-[#EFEAE0] bg-white p-8 shadow-sm">
 
       <h2 className="text-2xl font-semibold mb-6">
         Security
@@ -65,7 +65,7 @@ if (form.currentPassword == form.newPassword){
   }
           type="password"
           placeholder="Current Password"
-          className="rounded-xl border border-[#E6DCC7] p-3"
+          className="rounded-xl border border-[#EFEAE0] p-3"
         />
 
         <input
@@ -78,7 +78,7 @@ if (form.currentPassword == form.newPassword){
   }
           type="password"
           placeholder="New Password"
-          className="rounded-xl border border-[#E6DCC7] p-3"
+          className="rounded-xl border border-[#EFEAE0] p-3"
         />
 
         <input
@@ -91,14 +91,14 @@ if (form.currentPassword == form.newPassword){
   }
           type="password"
           placeholder="Confirm Password"
-          className="rounded-xl border border-[#E6DCC7] p-3"
+          className="rounded-xl border border-[#EFEAE0] p-3"
         />
 
       </div>
 
       <button 
       onClick={handleSave}
-      className="mt-8 rounded-full bg-[#4B672D] px-6 py-3 text-white">
+     className="mt-8 rounded-xl bg-[#1E56CD] px-6 py-3 text-white hover:bg-[#17439E]">
         Change Password
       </button>
 

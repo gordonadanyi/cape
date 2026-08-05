@@ -41,16 +41,16 @@ export default function PdfPreview({ invoiceId }: Props) {
   }, [invoiceId]);
 
   return (
-    <div className="overflow-hidden rounded-[32px] border border-[#E6DCC7] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-[32px] border border-[#EFEAE0] bg-white shadow-sm">
 
-      <div className="flex items-center justify-between border-b border-[#E6DCC7] px-8 py-5">
+      <div className="flex items-center justify-between border-b border-[#EFEAE0] px-8 py-5">
 
         <div>
           <h2 className="text-2xl font-semibold">
             Invoice Preview
           </h2>
 
-          <p className="mt-1 text-[#4B672D]">
+          <p className="mt-1 text-[#000000]">
             Review the uploaded invoice.
           </p>
         </div>
@@ -59,7 +59,7 @@ export default function PdfPreview({ invoiceId }: Props) {
           <a
             href={pdfUrl}
             download="invoice.pdf"
-            className="flex items-center gap-2 rounded-xl border border-[#E6DCC7] px-5 py-3 hover:bg-[#FEF9EE]"
+            className="flex items-center gap-2 rounded-xl border border-[#EFEAE0] px-5 py-3 hover:bg-[#FDF8F2]"
           >
             <Download size={18} />
             Download
@@ -77,7 +77,7 @@ export default function PdfPreview({ invoiceId }: Props) {
             className="h-full w-full"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-[#4B672D]">
+          <div className="flex h-full items-center justify-center text-[#1E56CD]">
             Loading PDF...
           </div>
         )}

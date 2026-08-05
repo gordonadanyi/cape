@@ -44,7 +44,7 @@ export default function InvoiceActions({
       )}
 
       <button
-        className="rounded-lg p-2 text-[#4B672D] hover:bg-[#FEF9EE]"
+        className="rounded-lg p-2 text-[#1E56CD] hover:bg-[#FDF8F2]"
         title="View"
         onClick={() => onView(invoiceId)}
       >

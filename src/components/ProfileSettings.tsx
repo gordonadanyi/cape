@@ -49,7 +49,7 @@ async function handleSave() {
 }
 
   return (
-    <div className="rounded-[32px] border border-[#E6DCC7] bg-white p-8 shadow-sm">
+    <div className="rounded-[32px] border border-[#EFEAE0] bg-white p-8 shadow-sm">
 
       <h2 className="text-2xl font-semibold mb-6">
         Profile
@@ -66,7 +66,7 @@ async function handleSave() {
     })
   }
   placeholder="Full Name"
-  className="rounded-xl border border-[#E6DCC7] p-3 outline-none"
+  className="rounded-xl border border-[#EFEAE0] p-3 outline-none"
 />
 
        <input
@@ -78,7 +78,7 @@ async function handleSave() {
     })
   }
   placeholder="Email Address"
-  className="rounded-xl border border-[#E6DCC7] p-3 outline-none"
+  className="rounded-xl border border-[#EFEAE0] p-3 outline-none"
 />
 
         <input
@@ -90,7 +90,7 @@ async function handleSave() {
     })
   }
   placeholder="Company Name"
-  className="rounded-xl border border-[#E6DCC7] p-3 outline-none"
+  className="rounded-xl border border-[#EFEAE0] p-3 outline-none"
 />
 
         <input
@@ -102,14 +102,14 @@ async function handleSave() {
     })
   }
   placeholder="Phone Number"
-  className="rounded-xl border border-[#E6DCC7] p-3 outline-none"
+  className="rounded-xl border border-[#EFEAE0] p-3 outline-none"
 />
 
       </div>
 
      <button
   onClick={handleSave}
-  className="mt-8 rounded-full bg-[#4B672D] px-6 py-3 text-white hover:bg-[#3F5824]"
+  className="mt-8 rounded-xl bg-[#1E56CD] px-6 py-3 text-white hover:bg-[#17439E]"
 >
   Save Changes
 </button>

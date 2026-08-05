@@ -27,10 +27,10 @@ export default function InvoiceTable({
   onPaid
 }: Props) {
   return (
-    <div className="overflow-hidden rounded-[32px] border border-[#E6DCC7] bg-white shadow-sm">
+    <div className="overflow-hidden rounded-[32px] border border-[#EFEAE0] bg-white shadow-sm">
       <table className="w-full">
-        <thead className="bg-[#FEF9EE]">
-          <tr className="text-left text-sm text-[#4B672D]">
+        <thead className="bg-[#FDF8F2]">
+          <tr className="text-left text-sm text-[#000000]">
             <th className="px-6 py-4">Customer</th>
             <th className="px-6 py-4">Invoice</th>
             <th className="px-6 py-4">Amount</th>
@@ -44,7 +44,7 @@ export default function InvoiceTable({
           {invoices.map((invoice) => (
             <tr
               key={invoice._id}
-              className="border-t border-[#F2E8D8] hover:bg-[#FEF9EE]"
+              className="border-t border-[#F2E8D8] hover:bg-[#FDF8F2]"
             >
               <td className="px-6 py-5">
                 {invoice.customerName || "-"}

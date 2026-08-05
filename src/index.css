@@ -4,3 +4,38 @@
 body {
   font-family: 'Candara', system-ui, sans-serif;
 }
+
+/* Ambient drifting circles — shared across landing page, login, signup.
+   Each on its own path/duration/delay so they don't move in visible sync. */
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(26px, -22px); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 18px); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(18px, -14px); }
+  66% { transform: translate(-14px, 12px); }
+}
+@keyframes drift-d {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-16px, -20px); }
+}
+@keyframes drift-e {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(14px, 18px); }
+}
+.drift-a { animation: drift-a 12s ease-in-out infinite; }
+.drift-b { animation: drift-b 16s ease-in-out infinite 1.2s; }
+.drift-c { animation: drift-c 14s ease-in-out infinite 0.6s; }
+.drift-d { animation: drift-d 10s ease-in-out infinite 2.4s; }
+.drift-e { animation: drift-e 9s ease-in-out infinite 0.3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drift-a, .drift-b, .drift-c, .drift-d, .drift-e {
+    animation: none;
+  }
+}

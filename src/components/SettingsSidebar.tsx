@@ -76,8 +76,8 @@ export default function SettingsSidebar({
               }
               className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
                 activeTab === item.id
-                  ? "bg-[#4B672D] text-white"
-                  : "hover:bg-[#F4E9D6]"
+                  ? "bg-[#1E56CD] text-white"
+                  : "hover:bg-[#FDF8F2]"
               }`}
             >
               <Icon size={18} />

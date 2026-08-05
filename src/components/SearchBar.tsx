@@ -1,5 +1,4 @@
 import { Search } from "lucide-react";
-
 interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
@@ -18,7 +17,7 @@ export default function SearchBar({
         placeholder="Search customer or invoice..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-[#E6DCC7] bg-white py-3 pl-12 pr-4 text-sm outline-none focus:border-[#4B672D]"
+        className="w-full rounded-xl border border-[#EFEAE0] bg-white py-3 pl-12 pr-4 text-sm outline-none focus:border-[#1E56CD]"
       />
     </div>
   );

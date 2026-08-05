@@ -136,16 +136,16 @@ async function saveSettings() {
 
   if (loading) {
     return (
-      <div className="rounded-[32px] border border-[#E6DCC7] bg-white p-10">
+      <div className="rounded-[32px] border border-[#EFEAE0] bg-white p-10">
         Loading reminder settings...
       </div>
     );
   }
 
   return (
-    <div className="rounded-[32px] border border-[#E6DCC7] bg-white p-10 shadow-sm">
+    <div className="rounded-[32px] border border-[#EFEAE0] bg-white p-10 shadow-sm">
 
-      <h2 className="text-2xl font-semibold text-[#1E2118]">
+      <h2 className="text-2xl font-semibold text-[#0F1B3D]">
         Reminder Settings
       </h2>
 
@@ -158,10 +158,10 @@ async function saveSettings() {
         <button
           type="button"
           onClick={() => setActiveTab("before")}
-          className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-5 py-2 text-sm font-medium transition ${
             activeTab === "before"
-              ? "bg-[#4B672D] text-white"
-              : "border border-[#E6DCC7] bg-white"
+              ? "bg-[#1E56CD] text-white"
+              : "border border-[#EFEAE0] bg-white"
           }`}
         >
           Before Due Date
@@ -170,10 +170,10 @@ async function saveSettings() {
         <button
           type="button"
           onClick={() => setActiveTab("dueToday")}
-          className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-5 py-2 text-sm font-medium transition ${
             activeTab === "dueToday"
-              ? "bg-[#4B672D] text-white"
-              : "border border-[#E6DCC7] bg-white"
+              ? "bg-[#1E56CD] text-white"
+              : "border border-[#EFEAE0] bg-white"
           }`}
         >
           Due Today
@@ -182,10 +182,10 @@ async function saveSettings() {
         <button
           type="button"
           onClick={() => setActiveTab("overdue")}
-          className={`rounded-full px-5 py-2 text-sm font-medium transition ${
+          className={`rounded-xl px-5 py-2 text-sm font-medium transition ${
             activeTab === "overdue"
-              ? "bg-[#4B672D] text-white"
-              : "border border-[#E6DCC7] bg-white"
+              ? "bg-[#1E56CD] text-white"
+              : "border border-[#EFEAE0] bg-white"
           }`}
         >
           Overdue
@@ -198,10 +198,10 @@ async function saveSettings() {
       {activeTab === "before" && (
         <div className="mt-8 space-y-6">
 
-          <div className="flex items-center justify-between rounded-2xl border border-[#E6DCC7] p-5">
+          <div className="flex items-center justify-between rounded-2xl border border-[#EFEAE0] p-5">
 
             <div>
-              <h3 className="font-semibold text-[#1E2118]">
+              <h3 className="font-semibold text-[#0F1B3D]">
                 Enable Before Due Reminder
               </h3>
 
@@ -219,7 +219,7 @@ async function saveSettings() {
                   e.target.checked
                 )
               }
-              className="h-5 w-5 accent-[#4B672D]"
+              className="h-5 w-5 accent-[#1E56CD]"
             />
 
           </div>
@@ -241,7 +241,7 @@ async function saveSettings() {
                   Number(e.target.value)
                 )
               }
-              className="w-32 rounded-xl border border-[#E6DCC7] p-3 disabled:bg-gray-100"
+              className="w-32 rounded-xl border border-[#EFEAE0] p-3 disabled:bg-gray-100"
             />
 
           </div>
@@ -261,7 +261,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-3"
+              className="w-full rounded-xl border border-[#EFEAE0] p-3"
             />
 
           </div>
@@ -281,7 +281,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-4 resize-none"
+              className="w-full rounded-xl border border-[#EFEAE0] p-4 resize-none"
             />
 
           </div>
@@ -293,10 +293,10 @@ async function saveSettings() {
       {activeTab === "dueToday" && (
         <div className="mt-8 space-y-6">
 
-          <div className="flex items-center justify-between rounded-2xl border border-[#E6DCC7] p-5">
+          <div className="flex items-center justify-between rounded-2xl border border-[#EFEAE0] p-5">
 
             <div>
-              <h3 className="font-semibold text-[#1E2118]">
+              <h3 className="font-semibold text-[#0F1B3D]">
                 Enable Due Today Reminder
               </h3>
 
@@ -314,7 +314,7 @@ async function saveSettings() {
                   e.target.checked
                 )
               }
-              className="h-5 w-5 accent-[#4B672D]"
+              className="h-5 w-5 accent-[#1E56CD]"
             />
 
           </div>
@@ -334,7 +334,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-3"
+              className="w-full rounded-xl border border-[#EFEAE0] p-3"
             />
 
           </div>
@@ -354,7 +354,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-4 resize-none"
+              className="w-full rounded-xl border border-[#EFEAE0] p-4 resize-none"
             />
 
           </div>
@@ -367,10 +367,10 @@ async function saveSettings() {
       {activeTab === "overdue" && (
         <div className="mt-8 space-y-6">
 
-          <div className="flex items-center justify-between rounded-2xl border border-[#E6DCC7] p-5">
+          <div className="flex items-center justify-between rounded-2xl border border-[#EFEAE0] p-5">
 
             <div>
-              <h3 className="font-semibold text-[#1E2118]">
+              <h3 className="font-semibold text-[#0F1B3D]">
                 Enable Overdue Reminder
               </h3>
 
@@ -388,7 +388,7 @@ async function saveSettings() {
                   e.target.checked
                 )
               }
-              className="h-5 w-5 accent-[#4B672D]"
+              className="h-5 w-5 accent-[#1E56CD]"
             />
 
           </div>
@@ -410,7 +410,7 @@ async function saveSettings() {
                   Number(e.target.value)
                 )
               }
-              className="w-32 rounded-xl border border-[#E6DCC7] p-3 disabled:bg-gray-100"
+              className="w-32 rounded-xl border border-[#EFEAE0] p-3 disabled:bg-gray-100"
             />
 
           </div>
@@ -430,7 +430,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-3"
+              className="w-full rounded-xl border border-[#EFEAE0] p-3"
             />
 
           </div>
@@ -450,7 +450,7 @@ async function saveSettings() {
                   e.target.value
                 )
               }
-              className="w-full rounded-xl border border-[#E6DCC7] p-4 resize-none"
+              className="w-full rounded-xl border border-[#EFEAE0] p-4 resize-none"
             />
 
           </div>
@@ -459,9 +459,9 @@ async function saveSettings() {
       )}
             {/* EMAIL SIGNATURE */}
 
-      <div className="mt-10 border-t border-[#E6DCC7] pt-8">
+      <div className="mt-10 border-t border-[#EFEAE0] pt-8">
 
-        <h3 className="text-lg font-semibold text-[#1E2118]">
+        <h3 className="text-lg font-semibold text-[#0F1B3D]">
           Email Signature
         </h3>
 
@@ -473,7 +473,7 @@ async function saveSettings() {
           onChange={(e) =>
             updateField("signature", e.target.value)
           }
-          className="w-full rounded-xl border border-[#E6DCC7] p-4 resize-none"
+          className="w-full rounded-xl border border-[#EFEAE0] p-4 resize-none"
         />
 
       </div>
@@ -485,7 +485,7 @@ async function saveSettings() {
           type="button"
           disabled={saving}
           onClick={saveSettings}
-          className="rounded-full bg-[#4B672D] px-8 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-[#1E56CD] px-8 py-3 font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving
             ? "Saving..."

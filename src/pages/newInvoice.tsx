@@ -91,23 +91,19 @@ setTimeout(() => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FEF9EE] font-candara text-[#1E2118]">
+    <div className="min-h-screen bg-[#FDF8F2] font-candara text-[#0F1B3D]">
       {/* Navbar */}
-      <nav className="border-b border-[#E6DCC7] bg-white shadow-sm">
+      <nav className="border-b border-[#EFEAE0] bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4B672D] text-sm font-bold text-white">
-              IF
-            </div>
-
-            <span className="text-xl font-semibold text-[#4B672D]">
+            <span className="text-xl font-semibold text-[#1E56CD]">
               Cape
             </span>
           </div>
 
           <button
             onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 rounded-xl border border-[#E6DCC7] bg-[#FEF9EE] px-4 py-2 text-sm font-medium text-[#4B672D] transition hover:bg-[#F4E9D6]"
+            className="flex items-center gap-2 rounded-xl border border-[#EFEAE0] bg-[#1E56CD] px-4 py-2 text-sm font-medium text-[#FDF8F2] transition hover:bg-[#17439E]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
@@ -122,17 +118,17 @@ setTimeout(() => {
             Start a New Invoice
           </h1>
 
-          <p className="text-lg text-[#4B672D]">
+          <p className="text-lg text-[#000000]">
             Upload your invoice PDF to Cape for processing.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-[32px] border border-[#E6DCC7] bg-white p-8 shadow-sm"
+          className="rounded-[32px] border border-[#EFEAE0] bg-white p-8 shadow-sm"
         >
-          <div className="rounded-[24px] border border-dashed border-[#A1A6A6] bg-[#FEF9EE] p-8 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#DCE9A8] text-[#4B672D]">
+          <div className="rounded-[24px] border border-dashed border-[#A1A6A6] bg-[#FDF8F2] p-8 text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFFFFF] text-[#1E56CD]">
               <UploadCloud className="h-7 w-7" />
             </div>
 
@@ -140,11 +136,11 @@ setTimeout(() => {
               Choose a PDF Invoice
             </h2>
 
-            <p className="mt-2 text-sm text-[#4B672D]">
+            <p className="mt-2 text-sm text-[#000000]">
               Only PDF files are supported.
             </p>
 
-            <label className="mt-6 inline-flex cursor-pointer items-center rounded-full bg-[#4B672D] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#3F5824]">
+            <label className="mt-6 inline-flex cursor-pointer items-center rounded-xl bg-[#1E56CD] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#17439E]">
               <input
                 type="file"
                 accept="application/pdf"
@@ -155,7 +151,7 @@ setTimeout(() => {
             </label>
 
             {selectedFile && (
-              <p className="mt-4 text-sm font-medium text-[#4B672D]">
+              <p className="mt-4 text-sm font-medium text-[#1E56CD]">
                 Selected file: {selectedFile.name}
               </p>
             )}
@@ -164,7 +160,7 @@ setTimeout(() => {
           <button
             type="submit"
             disabled={isUploading}
-            className="mt-8 inline-flex items-center rounded-full bg-[#4B672D] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#3F5824] disabled:cursor-not-allowed disabled:bg-[#A1A6A6]"
+            className="mt-8 inline-flex items-center rounded-xl bg-[#1E56CD] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#17439E] disabled:cursor-not-allowed disabled:bg-[#A1A6A6]"
           >
             {isUploading ? "Uploading..." : "Upload Invoice"}
           </button>
@@ -173,7 +169,7 @@ setTimeout(() => {
             <div
               className={`mt-6 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
                 statusType === "success"
-                  ? "border-[#DCE9A8] bg-[#F6FBEA] text-[#4B672D]"
+                  ? "border-[#DCE9A8] bg-[#F6FBEA] text-[#1E56CD]"
                   : "border-red-200 bg-red-50 text-red-700"
               }`}
             >

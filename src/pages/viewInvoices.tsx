@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import InvoiceTable from "../components/InvoiceTable";
@@ -7,6 +6,7 @@ import SearchBar from "../components/SearchBar";
 import EmptyState  from "../components/EmptyState";
 import api from "../api/axios";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import AppShell from "../components/AppShell";
 
 export interface Invoice {
   _id: string;
@@ -21,6 +21,9 @@ export interface Invoice {
   isSent?: boolean;
   isScheduled?: boolean;
   sendAt?: string;
+  sentAt?: string;
+  paidAt?: string;
+  amountPaid?: number;
   createdAt: string;
 }
 
@@ -166,32 +169,7 @@ async function handlePaid(id: string) {
   );
 
   return (
-    <div className="min-h-screen bg-[#FEF9EE] font-candara text-[#1E2118]">
-      {/* Navbar */}
-
-      <nav className="border-b border-[#E6DCC7] bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4B672D] font-bold text-white">
-              IF
-            </div>
-
-            <span className="text-xl font-semibold text-[#4B672D]">
-              Cape
-            </span>
-          </div>
-
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 rounded-xl border border-[#E6DCC7] bg-[#FEF9EE] px-4 py-2 text-sm font-medium text-[#4B672D] transition hover:bg-[#F4E9D6]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </button>
-        </div>
-      </nav>
-
+    <AppShell>
       {/* Content */}
 
       <div className="mx-auto max-w-7xl px-6 py-10">
@@ -201,7 +179,7 @@ async function handlePaid(id: string) {
             View Invoices
           </h1>
 
-          <p className="mt-2 text-[#4B672D]">
+          <p className="mt-2 text-[#000000]">
             View, search and manage all uploaded invoices.
           </p>
         </div>
@@ -245,7 +223,7 @@ async function handlePaid(id: string) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-[#E6DCC7] bg-white px-5 py-3 text-sm outline-none"
+            className="rounded-xl border border-[#EFEAE0] bg-white px-5 py-3 text-sm outline-none"
           >
             <option value="all">All Statuses</option>
             <option value="pending">Pending</option>
@@ -294,7 +272,7 @@ async function handlePaid(id: string) {
 />
           )}
       </div>
-    </div>
+    </AppShell>
   );
 }
 function TabButton({
@@ -311,8 +289,8 @@ function TabButton({
       onClick={onClick}
       className={`flex items-center rounded-full px-5 py-2 text-sm font-medium transition ${
         active
-          ? "bg-[#4B672D] text-white"
-          : "bg-white text-[#4B672D] border border-[#E6DCC7] hover:bg-[#FEF9EE]"
+          ? "bg-[#1E56CD] text-white"
+          : "bg-white text-[#000000] border border-[#EFEAE0] hover:bg-[#FDF8F2]"
       }`}
     >
       {children}
