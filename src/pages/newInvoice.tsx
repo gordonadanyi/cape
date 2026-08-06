@@ -151,7 +151,7 @@ setTimeout(() => {
             </label>
 
             {selectedFile && (
-              <p className="mt-4 text-sm font-medium text-[#1E56CD]">
+              <p className="mt-4 text-sm font-medium text-[#000000]">
                 Selected file: {selectedFile.name}
               </p>
             )}
@@ -169,7 +169,7 @@ setTimeout(() => {
             <div
               className={`mt-6 flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm ${
                 statusType === "success"
-                  ? "border-[#DCE9A8] bg-[#F6FBEA] text-[#1E56CD]"
+                  ? "border-[#DCE9A8] bg-[#F6FBEA] text-[#000000]"
                   : "border-red-200 bg-red-50 text-red-700"
               }`}
             >
