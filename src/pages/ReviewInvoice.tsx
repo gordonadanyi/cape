@@ -283,7 +283,7 @@ ${finalSignature}`;
           submitting={submitting}
         />
 
-        {invoice && <PayInvoiceButton invoiceId={invoice._id} />}
+       
 
       </div>
 
