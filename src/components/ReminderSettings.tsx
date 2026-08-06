@@ -128,11 +128,6 @@ async function saveSettings() {
     }));
   }
 
-  function copyVariable(variable: string) {
-    navigator.clipboard.writeText(variable);
-
-    alert(`${variable} copied.`);
-  }
 
   if (loading) {
     return (
