@@ -454,7 +454,7 @@ function InvoiceRow({
   onPaid: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const status = statusStyles[invoice.status];
+  // const status = statusStyles[invoice.status];
 
   return (
     <div
