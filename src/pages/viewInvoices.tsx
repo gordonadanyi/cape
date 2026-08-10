@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-
+import { getErrorMessage } from "../utils/getErrorMessage";
 import InvoiceTable from "../components/InvoiceTable";
 import SearchBar from "../components/SearchBar";
 import EmptyState from "../components/EmptyState";
