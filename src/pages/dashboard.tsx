@@ -156,7 +156,7 @@ function Dashboard() {
         )}
 
         {/* Stat cards */}
-        <div className="mb-3 grid grid-cols-3 gap-3">
+        <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
             <p className="text-xs text-[#8A93AC]">Outstanding</p>
             <p className="mt-1 text-xl font-medium text-[#0F1B3D]">
@@ -205,7 +205,7 @@ function Dashboard() {
         </div>
 
         {/* Collection rate + yearly chart */}
-        <div className="mb-3 grid grid-cols-[180px_1fr] gap-3">
+        <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-[180px_1fr]">
           <div className="flex flex-col items-center justify-center rounded-xl border border-[#EFEAE0] bg-white p-4">
             <p className="mb-3 self-start text-[13px] font-medium text-[#0F1B3D]">
               Collection rate
