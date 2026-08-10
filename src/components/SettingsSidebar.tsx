@@ -58,7 +58,7 @@ export default function SettingsSidebar({
   setActiveTab,
 }: Props) {
   return (
-    <div className="w-72 rounded-[32px] border border-[#E6DCC7] bg-white p-6 shadow-sm">
+    <div className="w-full rounded-[32px] border border-[#EFEAE0] bg-white p-6 shadow-sm md:w-72">
 
       <h2 className="mb-6 text-xl font-bold">
         Settings
