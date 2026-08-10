@@ -44,7 +44,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell>
-      <main className="mx-auto flex max-w-7xl gap-8 px-6 py-10 h-[570px]">
+      <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10 md:h-[570px] md:flex-row md:gap-8">
         <SettingsSidebar
           activeTab={activeTab}
           setActiveTab={setActiveTab}
