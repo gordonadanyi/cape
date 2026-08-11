@@ -49,14 +49,17 @@ const statusStyles: Record<
     container: "bg-[#E8EEFC] text-[#1E56CD]",
     dot: "bg-[#1E56CD]",
   },
+
   pending: {
     container: "bg-[#FBF3DC] text-[#8A6A1F]",
     dot: "bg-[#C99B2E]",
   },
+
   overdue: {
     container: "bg-[#FBE3E0] text-[#C4432E]",
     dot: "bg-[#C4432E]",
   },
+
   cancelled: {
     container: "bg-gray-100 text-gray-600",
     dot: "bg-gray-500",
@@ -78,7 +81,9 @@ export default function ViewInvoices() {
     (searchParams.get("tab") as InvoiceTab) || "all";
 
   function setTab(next: InvoiceTab) {
-    setSearchParams(next === "all" ? {} : { tab: next });
+    setSearchParams(
+      next === "all" ? {} : { tab: next },
+    );
   }
 
   useEffect(() => {
@@ -94,31 +99,136 @@ export default function ViewInvoices() {
 
       setInvoices(res.data);
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to load invoices."));
+      setError(
+        getErrorMessage(
+          err,
+          "Failed to load invoices.",
+        ),
+      );
     } finally {
       setLoading(false);
     }
   }
 
+  /*
+   * Opens the invoice preview immediately.
+   *
+   * This is important for mobile browsers because calling
+   * window.open() AFTER an awaited API request can be treated
+   * as a popup and blocked.
+   */
   async function handleView(id: string) {
+    const previewWindow = window.open(
+      "",
+      "_blank",
+    );
+
+    if (!previewWindow) {
+      setError(
+        "Your browser blocked the invoice preview. Please allow pop-ups for Cape and try again.",
+      );
+      return;
+    }
+
+    /*
+     * Show a loading screen immediately while the PDF
+     * is being fetched.
+     */
+    previewWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Loading invoice...</title>
+
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+          />
+
+          <style>
+            body {
+              margin: 0;
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: #fdf8f2;
+              font-family: Arial, sans-serif;
+              color: #0f1b3d;
+            }
+
+            .loading {
+              text-align: center;
+              padding: 24px;
+            }
+
+            .spinner {
+              width: 32px;
+              height: 32px;
+              margin: 0 auto 16px;
+              border: 4px solid #e8eefc;
+              border-top-color: #1e56cd;
+              border-radius: 50%;
+              animation: spin 0.8s linear infinite;
+            }
+
+            @keyframes spin {
+              to {
+                transform: rotate(360deg);
+              }
+            }
+          </style>
+        </head>
+
+        <body>
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading invoice...</p>
+          </div>
+        </body>
+      </html>
+    `);
+
     try {
-      const response = await api.get(`/invoices/${id}`, {
-        responseType: "blob",
-      });
+      const response = await api.get(
+        `/invoices/${id}`,
+        {
+          responseType: "blob",
+        },
+      );
 
-      const file = new Blob([response.data], {
-        type: "application/pdf",
-      });
+      const file = new Blob(
+        [response.data],
+        {
+          type: "application/pdf",
+        },
+      );
 
-      const url = URL.createObjectURL(file);
+      const url =
+        URL.createObjectURL(file);
 
-      window.open(url, "_blank");
+      /*
+       * The new tab already exists, so mobile browsers
+       * should allow us to navigate it to the PDF.
+       */
+      previewWindow.location.href = url;
 
+      /*
+       * Give the browser plenty of time to load
+       * the PDF before revoking the object URL.
+       */
       setTimeout(() => {
         URL.revokeObjectURL(url);
-      }, 1000);
+      }, 60_000);
     } catch (err) {
-      setError(getErrorMessage(err, "Couldn't open that invoice."));
+      previewWindow.close();
+
+      setError(
+        getErrorMessage(
+          err,
+          "Couldn't open that invoice.",
+        ),
+      );
     }
   }
 
@@ -128,9 +238,12 @@ export default function ViewInvoices() {
 
   async function handlePaid(id: string) {
     try {
-      await api.patch(`/invoices/${id}/status`, {
-        status: "paid",
-      });
+      await api.patch(
+        `/invoices/${id}/status`,
+        {
+          status: "paid",
+        },
+      );
 
       setInvoices((prev) =>
         prev.map((invoice) =>
@@ -138,14 +251,18 @@ export default function ViewInvoices() {
             ? {
                 ...invoice,
                 status: "paid",
-                paidAt: new Date().toISOString(),
+                paidAt:
+                  new Date().toISOString(),
               }
             : invoice,
         ),
       );
     } catch (err) {
       setError(
-        getErrorMessage(err, "Couldn't mark that invoice as paid."),
+        getErrorMessage(
+          err,
+          "Couldn't mark that invoice as paid.",
+        ),
       );
     }
   }
@@ -155,24 +272,44 @@ export default function ViewInvoices() {
       "Are you sure you want to delete this invoice?",
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
 
     try {
       await api.delete(`/invoices/${id}`);
 
       setInvoices((prev) =>
-        prev.filter((invoice) => invoice._id !== id),
+        prev.filter(
+          (invoice) =>
+            invoice._id !== id,
+        ),
       );
     } catch (err) {
       setError(
-        getErrorMessage(err, "Couldn't delete that invoice."),
+        getErrorMessage(
+          err,
+          "Couldn't delete that invoice.",
+        ),
       );
     }
   }
 
+  /*
+   * Filter invoices.
+   *
+   * IMPORTANT:
+   * We use getEffectiveStatus() instead of directly
+   * checking invoice.status.
+   *
+   * This means an invoice whose backend status is still
+   * "pending" will appear as "overdue" once its due date
+   * has passed.
+   */
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
-      const searchValue = search.toLowerCase().trim();
+      const searchValue =
+        search.toLowerCase().trim();
 
       const matchesSearch =
         !searchValue ||
@@ -186,9 +323,13 @@ export default function ViewInvoices() {
           ?.toLowerCase()
           .includes(searchValue);
 
+      const effectiveStatus =
+        getEffectiveStatus(invoice);
+
       const matchesStatus =
         statusFilter === "all" ||
-        invoice.status === statusFilter;
+        effectiveStatus ===
+          statusFilter;
 
       const matchesTab =
         tab === "all" ||
@@ -197,8 +338,10 @@ export default function ViewInvoices() {
           !invoice.isScheduled) ||
         (tab === "scheduled" &&
           !invoice.isSent &&
-          invoice.isScheduled === true) ||
-        (tab === "sent" && invoice.isSent === true);
+          invoice.isScheduled ===
+            true) ||
+        (tab === "sent" &&
+          invoice.isSent === true);
 
       return (
         matchesSearch &&
@@ -206,13 +349,19 @@ export default function ViewInvoices() {
         matchesTab
       );
     });
-  }, [search, statusFilter, tab, invoices]);
+  }, [
+    search,
+    statusFilter,
+    tab,
+    invoices,
+  ]);
 
   const draftCount = useMemo(
     () =>
       invoices.filter(
         (invoice) =>
-          !invoice.isSent && !invoice.isScheduled,
+          !invoice.isSent &&
+          !invoice.isScheduled,
       ).length,
     [invoices],
   );
@@ -230,7 +379,8 @@ export default function ViewInvoices() {
   const sentCount = useMemo(
     () =>
       invoices.filter(
-        (invoice) => invoice.isSent === true,
+        (invoice) =>
+          invoice.isSent === true,
       ).length,
     [invoices],
   );
@@ -239,7 +389,11 @@ export default function ViewInvoices() {
     <AppShell>
       <div className="min-h-screen bg-[#FDF8F2]">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {/* Header */}
+
+          {/* =====================================================
+              HEADER
+          ===================================================== */}
+
           <div className="mb-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -252,7 +406,7 @@ export default function ViewInvoices() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 shadow-sm">
+              <div className="flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2.5 shadow-sm">
                 <FileText className="h-4 w-4 text-[#1E56CD]" />
 
                 <span className="text-sm font-semibold text-[#0F1B3D]">
@@ -268,19 +422,26 @@ export default function ViewInvoices() {
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* =====================================================
+              TABS
+          ===================================================== */}
+
           <div className="mb-6 overflow-x-auto pb-1">
             <div className="flex min-w-max gap-2">
               <TabButton
                 active={tab === "all"}
-                onClick={() => setTab("all")}
+                onClick={() =>
+                  setTab("all")
+                }
               >
                 All
               </TabButton>
 
               <TabButton
                 active={tab === "drafts"}
-                onClick={() => setTab("drafts")}
+                onClick={() =>
+                  setTab("drafts")
+                }
               >
                 Drafts
 
@@ -292,8 +453,12 @@ export default function ViewInvoices() {
               </TabButton>
 
               <TabButton
-                active={tab === "scheduled"}
-                onClick={() => setTab("scheduled")}
+                active={
+                  tab === "scheduled"
+                }
+                onClick={() =>
+                  setTab("scheduled")
+                }
               >
                 Scheduled
 
@@ -306,7 +471,9 @@ export default function ViewInvoices() {
 
               <TabButton
                 active={tab === "sent"}
-                onClick={() => setTab("sent")}
+                onClick={() =>
+                  setTab("sent")
+                }
               >
                 Sent
 
@@ -319,7 +486,10 @@ export default function ViewInvoices() {
             </div>
           </div>
 
-          {/* Search + Filter */}
+          {/* =====================================================
+              SEARCH + FILTER
+          ===================================================== */}
+
           <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="w-full md:max-w-md">
               <SearchBar
@@ -331,19 +501,38 @@ export default function ViewInvoices() {
             <select
               value={statusFilter}
               onChange={(e) =>
-                setStatusFilter(e.target.value)
+                setStatusFilter(
+                  e.target.value,
+                )
               }
               className="w-full rounded-xl border border-[#EFEAE0] bg-white px-4 py-3 text-sm font-medium text-[#0F1B3D] outline-none transition focus:border-[#1E56CD] md:w-auto"
             >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="overdue">Overdue</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="all">
+                All Statuses
+              </option>
+
+              <option value="pending">
+                Pending
+              </option>
+
+              <option value="paid">
+                Paid
+              </option>
+
+              <option value="overdue">
+                Overdue
+              </option>
+
+              <option value="cancelled">
+                Cancelled
+              </option>
             </select>
           </div>
 
-          {/* Loading */}
+          {/* =====================================================
+              LOADING
+          ===================================================== */}
+
           {loading && (
             <div className="rounded-[28px] border border-[#EFEAE0] bg-white p-12 text-center shadow-sm">
               <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-[#E8EEFC] border-t-[#1E56CD]" />
@@ -354,16 +543,22 @@ export default function ViewInvoices() {
             </div>
           )}
 
-          {/* Error */}
+          {/* =====================================================
+              ERROR
+          ===================================================== */}
+
           {!loading && error && (
             <div className="mb-6 rounded-2xl border border-red-100 bg-red-50 p-5 text-sm text-red-600">
               <p className="font-semibold">
                 Something went wrong
               </p>
 
-              <p className="mt-1">{error}</p>
+              <p className="mt-1">
+                {error}
+              </p>
 
               <button
+                type="button"
                 onClick={fetchInvoices}
                 className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
               >
@@ -372,48 +567,91 @@ export default function ViewInvoices() {
             </div>
           )}
 
-          {/* Empty */}
+          {/* =====================================================
+              EMPTY STATE
+          ===================================================== */}
+
           {!loading &&
             !error &&
-            filteredInvoices.length === 0 && (
+            filteredInvoices.length ===
+              0 && (
               <EmptyState />
             )}
 
-          {/* Invoice list */}
+          {/* =====================================================
+              INVOICE LIST
+          ===================================================== */}
+
           {!loading &&
             !error &&
-            filteredInvoices.length > 0 && (
+            filteredInvoices.length >
+              0 && (
               <div className="overflow-hidden rounded-[28px] border border-[#EFEAE0] bg-white shadow-[0_15px_45px_rgba(15,27,61,0.05)]">
-                {/* Desktop table header */}
+
+                {/* Desktop header */}
                 <div className="hidden border-b border-[#EFEAE0] bg-[#FDF8F2] px-6 py-4 lg:block">
                   <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_170px] items-center gap-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8A93AC]">
-                    <span>Client</span>
-                    <span>Invoice</span>
-                    <span>Amount</span>
-                    <span>Due</span>
-                    <span>Status</span>
+                    <span>
+                      Client
+                    </span>
+
+                    <span>
+                      Invoice
+                    </span>
+
+                    <span>
+                      Amount
+                    </span>
+
+                    <span>
+                      Due
+                    </span>
+
+                    <span>
+                      Status
+                    </span>
+
                     <span className="text-right">
                       Actions
                     </span>
                   </div>
                 </div>
 
-                {/* Horizontal mobile/tablet scroll */}
+                {/* =================================================
+                    HORIZONTAL MOBILE/TABLET SCROLL
+                ================================================= */}
+
                 <div className="overflow-x-auto">
                   <div className="min-w-[850px] lg:min-w-0">
                     {filteredInvoices.map(
-                      (invoice, index) => (
+                      (
+                        invoice,
+                        index,
+                      ) => (
                         <InvoiceRow
-                          key={invoice._id}
-                          invoice={invoice}
+                          key={
+                            invoice._id
+                          }
+                          invoice={
+                            invoice
+                          }
                           isLast={
                             index ===
-                            filteredInvoices.length - 1
+                            filteredInvoices.length -
+                              1
                           }
-                          onView={handleView}
-                          onEdit={handleEdit}
-                          onPaid={handlePaid}
-                          onDelete={handleDelete}
+                          onView={
+                            handleView
+                          }
+                          onEdit={
+                            handleEdit
+                          }
+                          onPaid={
+                            handlePaid
+                          }
+                          onDelete={
+                            handleDelete
+                          }
                         />
                       ),
                     )}
@@ -425,6 +663,7 @@ export default function ViewInvoices() {
                   <span>
                     Swipe horizontally to see all actions
                   </span>
+
                   <ChevronRight className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -454,16 +693,20 @@ function InvoiceRow({
   onPaid: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  // const status = statusStyles[invoice.status];
-
   return (
     <div
       className={`group px-5 py-5 transition hover:bg-[#FDFBF7] sm:px-6 ${
-        !isLast ? "border-b border-[#EFEAE0]" : ""
+        !isLast
+          ? "border-b border-[#EFEAE0]"
+          : ""
       }`}
     >
       <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_170px] items-center gap-4">
-        {/* Client */}
+
+        {/* =====================================================
+            CLIENT
+        ===================================================== */}
+
         <div className="min-w-0">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8EEFC] text-sm font-bold text-[#1E56CD]">
@@ -485,7 +728,9 @@ function InvoiceRow({
                   <Mail className="h-3 w-3 shrink-0 text-[#8A93AC]" />
 
                   <p className="max-w-[180px] truncate text-xs text-[#8A93AC]">
-                    {invoice.customerEmail}
+                    {
+                      invoice.customerEmail
+                    }
                   </p>
                 </div>
               )}
@@ -493,7 +738,10 @@ function InvoiceRow({
           </div>
         </div>
 
-        {/* Invoice */}
+        {/* =====================================================
+            INVOICE
+        ===================================================== */}
+
         <div>
           <p className="text-sm font-semibold text-[#0F1B3D]">
             {invoice.invoiceNumber ||
@@ -507,28 +755,41 @@ function InvoiceRow({
           </p>
         </div>
 
-        {/* Amount */}
+        {/* =====================================================
+            AMOUNT
+        ===================================================== */}
+
         <div>
           <p className="text-sm font-bold text-[#0F1B3D]">
-            {formatCurrency(invoice.amountDue)}
+            {formatCurrency(
+              invoice.amountDue,
+            )}
           </p>
 
-          {invoice.amountPaid !== undefined &&
+          {invoice.amountPaid !==
+            undefined &&
             invoice.amountPaid > 0 && (
               <p className="mt-1 text-xs text-[#1E56CD]">
                 Paid{" "}
-                {formatCurrency(invoice.amountPaid)}
+                {formatCurrency(
+                  invoice.amountPaid,
+                )}
               </p>
             )}
         </div>
 
-        {/* Due */}
+        {/* =====================================================
+            DUE
+        ===================================================== */}
+
         <div>
           <div className="flex items-center gap-1.5 text-sm font-medium text-[#5B6584]">
             <CalendarDays className="h-4 w-4 text-[#8A93AC]" />
 
             <span>
-              {formatDate(invoice.dueDate)}
+              {formatDate(
+                invoice.dueDate,
+              )}
             </span>
           </div>
 
@@ -536,26 +797,40 @@ function InvoiceRow({
             invoice.sendAt && (
               <p className="mt-1 text-xs text-[#8A93AC]">
                 Sends{" "}
-                {formatDate(invoice.sendAt)}
+                {formatDate(
+                  invoice.sendAt,
+                )}
               </p>
             )}
         </div>
 
-        {/* Status */}
+        {/* =====================================================
+            STATUS
+        ===================================================== */}
+
         <div>
           <StatusBadge
             status={invoice.status}
             isSent={invoice.isSent}
-            isScheduled={invoice.isScheduled}
+            isScheduled={
+              invoice.isScheduled
+            }
+            dueDate={invoice.dueDate}
           />
         </div>
 
-        {/* Actions */}
+        {/* =====================================================
+            ACTIONS
+        ===================================================== */}
+
         <div className="flex items-center justify-end gap-1.5">
-          {/* View */}
+
+          {/* Preview */}
           <ActionButton
             label="View invoice"
-            onClick={() => onView(invoice._id)}
+            onClick={() =>
+              onView(invoice._id)
+            }
           >
             <Eye className="h-4 w-4" />
           </ActionButton>
@@ -563,16 +838,21 @@ function InvoiceRow({
           {/* Edit */}
           <ActionButton
             label="Edit invoice"
-            onClick={() => onEdit(invoice._id)}
+            onClick={() =>
+              onEdit(invoice._id)
+            }
           >
             <Pencil className="h-4 w-4" />
           </ActionButton>
 
-          {/* Mark paid */}
-          {invoice.status !== "paid" && (
+          {/* Mark as paid */}
+          {invoice.status !==
+            "paid" && (
             <ActionButton
               label="Mark as paid"
-              onClick={() => onPaid(invoice._id)}
+              onClick={() =>
+                onPaid(invoice._id)
+              }
               variant="success"
             >
               <CheckCircle2 className="h-4 w-4" />
@@ -582,7 +862,9 @@ function InvoiceRow({
           {/* Delete */}
           <ActionButton
             label="Delete invoice"
-            onClick={() => onDelete(invoice._id)}
+            onClick={() =>
+              onDelete(invoice._id)
+            }
             variant="danger"
           >
             <Trash2 className="h-4 w-4" />
@@ -594,6 +876,74 @@ function InvoiceRow({
 }
 
 /* =========================================================
+   EFFECTIVE STATUS
+========================================================= */
+
+function getEffectiveStatus(
+  invoice: Invoice,
+): Invoice["status"] {
+  /*
+   * Paid and cancelled are final states.
+   */
+  if (invoice.status === "paid") {
+    return "paid";
+  }
+
+  if (
+    invoice.status === "cancelled"
+  ) {
+    return "cancelled";
+  }
+
+  /*
+   * Without a due date, use the backend status.
+   */
+  if (!invoice.dueDate) {
+    return invoice.status;
+  }
+
+  const dueDate = new Date(
+    invoice.dueDate,
+  );
+
+  if (
+    Number.isNaN(
+      dueDate.getTime(),
+    )
+  ) {
+    return invoice.status;
+  }
+
+  const now = new Date();
+
+  /*
+   * Compare dates by calendar day,
+   * not exact time.
+   */
+  const today = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+
+  const due = new Date(
+    dueDate.getFullYear(),
+    dueDate.getMonth(),
+    dueDate.getDate(),
+  );
+
+  if (
+    due < today &&
+    invoice.status !== "paid" &&
+    invoice.status !== "cancelled"
+  ) {
+    return "overdue";
+  }
+
+  return invoice.status;
+}
+
+/* =========================================================
    STATUS BADGE
 ========================================================= */
 
@@ -601,20 +951,57 @@ function StatusBadge({
   status,
   isSent,
   isScheduled,
+  dueDate,
 }: {
   status: Invoice["status"];
   isSent?: boolean;
   isScheduled?: boolean;
+  dueDate?: string;
 }) {
-  const style = statusStyles[status];
+  /*
+   * Create the effective status using the same
+   * overdue logic used by the filter.
+   */
+  const effectiveStatus =
+    getEffectiveStatus({
+      _id: "",
+      fileName: "",
+      originalName: "",
+      createdAt: "",
+      status,
+      dueDate,
+      isSent,
+      isScheduled,
+    });
+
+  const style =
+    statusStyles[effectiveStatus];
 
   let label =
-    status.charAt(0).toUpperCase() +
-    status.slice(1);
+    effectiveStatus
+      .charAt(0)
+      .toUpperCase() +
+    effectiveStatus.slice(1);
 
-  if (!isSent && isScheduled) {
+  /*
+   * Draft and scheduled are special display
+   * states based on sending information.
+   */
+  if (
+    !isSent &&
+    isScheduled
+  ) {
     label = "Scheduled";
-  } else if (!isSent && !isScheduled) {
+  } else if (
+    !isSent &&
+    !isScheduled &&
+    effectiveStatus !==
+      "overdue" &&
+    effectiveStatus !==
+      "paid" &&
+    effectiveStatus !==
+      "cancelled"
+  ) {
     label = "Draft";
   }
 
@@ -649,8 +1036,10 @@ function ActionButton({
   const variants = {
     default:
       "bg-[#F7F4ED] text-[#5B6584] hover:bg-[#E8EEFC] hover:text-[#1E56CD]",
+
     success:
       "bg-[#E8EEFC] text-[#1E56CD] hover:bg-[#D6E0FA]",
+
     danger:
       "bg-[#FBE3E0] text-[#C4432E] hover:bg-[#F6D2CD]",
   };
@@ -661,7 +1050,7 @@ function ActionButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${variants[variant]}`}
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition active:scale-95 ${variants[variant]}`}
     >
       {children}
     </button>
@@ -717,34 +1106,49 @@ function CountBadge({
 ========================================================= */
 
 function getInitials(name: string) {
-  const words = name.trim().split(/\s+/);
+  const words =
+    name.trim().split(/\s+/);
 
   if (words.length === 1) {
-    return words[0].slice(0, 2).toUpperCase();
+    return words[0]
+      .slice(0, 2)
+      .toUpperCase();
   }
 
   return (
-    words[0][0] + words[words.length - 1][0]
+    words[0][0] +
+    words[words.length - 1][0]
   ).toUpperCase();
 }
 
 function formatDate(date?: string) {
-  if (!date) return "—";
-
-  const parsed = new Date(date);
-
-  if (Number.isNaN(parsed.getTime())) {
+  if (!date) {
     return "—";
   }
 
-  return parsed.toLocaleDateString("en-NG", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const parsed = new Date(date);
+
+  if (
+    Number.isNaN(
+      parsed.getTime(),
+    )
+  ) {
+    return "—";
+  }
+
+  return parsed.toLocaleDateString(
+    "en-NG",
+    {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    },
+  );
 }
 
-function formatCurrency(amount?: number) {
+function formatCurrency(
+  amount?: number,
+) {
   if (
     amount === undefined ||
     amount === null ||
@@ -753,9 +1157,12 @@ function formatCurrency(amount?: number) {
     return "₦0";
   }
 
-  return new Intl.NumberFormat("en-NG", {
-    style: "currency",
-    currency: "NGN",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return new Intl.NumberFormat(
+    "en-NG",
+    {
+      style: "currency",
+      currency: "NGN",
+      maximumFractionDigits: 0,
+    },
+  ).format(amount);
 }
