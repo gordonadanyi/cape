@@ -38,6 +38,8 @@ export interface Invoice {
 
 type InvoiceTab = "all" | "drafts" | "scheduled" | "sent";
 
+type StatusFilter = "all" | Invoice["status"];
+
 const statusStyles: Record<
   Invoice["status"],
   {
@@ -74,7 +76,10 @@ export default function ViewInvoices() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  const [statusFilter, setStatusFilter] =
+    useState<StatusFilter>("all");
+
   const [error, setError] = useState("");
 
   const tab =
@@ -111,85 +116,16 @@ export default function ViewInvoices() {
   }
 
   /*
-   * Opens the invoice preview immediately.
+   * Open invoice PDF
    *
-   * This is important for mobile browsers because calling
-   * window.open() AFTER an awaited API request can be treated
-   * as a popup and blocked.
+   * On desktop this opens the PDF in a new tab.
+   * On mobile browsers, window.open can sometimes be blocked.
+   * We therefore create the PDF URL first and then try opening it.
    */
   async function handleView(id: string) {
-    const previewWindow = window.open(
-      "",
-      "_blank",
-    );
-
-    if (!previewWindow) {
-      setError(
-        "Your browser blocked the invoice preview. Please allow pop-ups for Cape and try again.",
-      );
-      return;
-    }
-
-    /*
-     * Show a loading screen immediately while the PDF
-     * is being fetched.
-     */
-    previewWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Loading invoice...</title>
-
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1"
-          />
-
-          <style>
-            body {
-              margin: 0;
-              min-height: 100vh;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              background: #fdf8f2;
-              font-family: Arial, sans-serif;
-              color: #0f1b3d;
-            }
-
-            .loading {
-              text-align: center;
-              padding: 24px;
-            }
-
-            .spinner {
-              width: 32px;
-              height: 32px;
-              margin: 0 auto 16px;
-              border: 4px solid #e8eefc;
-              border-top-color: #1e56cd;
-              border-radius: 50%;
-              animation: spin 0.8s linear infinite;
-            }
-
-            @keyframes spin {
-              to {
-                transform: rotate(360deg);
-              }
-            }
-          </style>
-        </head>
-
-        <body>
-          <div class="loading">
-            <div class="spinner"></div>
-            <p>Loading invoice...</p>
-          </div>
-        </body>
-      </html>
-    `);
-
     try {
+      setError("");
+
       const response = await api.get(
         `/invoices/${id}`,
         {
@@ -197,32 +133,32 @@ export default function ViewInvoices() {
         },
       );
 
-      const file = new Blob(
-        [response.data],
-        {
-          type: "application/pdf",
-        },
+      const file = new Blob([response.data], {
+        type: "application/pdf",
+      });
+
+      const url = URL.createObjectURL(file);
+
+      const opened = window.open(
+        url,
+        "_blank",
+        "noopener,noreferrer",
       );
 
-      const url =
-        URL.createObjectURL(file);
-
       /*
-       * The new tab already exists, so mobile browsers
-       * should allow us to navigate it to the PDF.
+       * Some mobile browsers block window.open.
+       * If that happens, navigate the current tab to
+       * the generated PDF instead.
        */
-      previewWindow.location.href = url;
+      if (!opened) {
+        window.location.href = url;
+        return;
+      }
 
-      /*
-       * Give the browser plenty of time to load
-       * the PDF before revoking the object URL.
-       */
       setTimeout(() => {
         URL.revokeObjectURL(url);
-      }, 60_000);
+      }, 60000);
     } catch (err) {
-      previewWindow.close();
-
       setError(
         getErrorMessage(
           err,
@@ -238,6 +174,8 @@ export default function ViewInvoices() {
 
   async function handlePaid(id: string) {
     try {
+      setError("");
+
       await api.patch(
         `/invoices/${id}/status`,
         {
@@ -251,8 +189,7 @@ export default function ViewInvoices() {
             ? {
                 ...invoice,
                 status: "paid",
-                paidAt:
-                  new Date().toISOString(),
+                paidAt: new Date().toISOString(),
               }
             : invoice,
         ),
@@ -277,12 +214,13 @@ export default function ViewInvoices() {
     }
 
     try {
+      setError("");
+
       await api.delete(`/invoices/${id}`);
 
       setInvoices((prev) =>
         prev.filter(
-          (invoice) =>
-            invoice._id !== id,
+          (invoice) => invoice._id !== id,
         ),
       );
     } catch (err) {
@@ -296,40 +234,45 @@ export default function ViewInvoices() {
   }
 
   /*
-   * Filter invoices.
+   * Filtering
    *
-   * IMPORTANT:
-   * We use getEffectiveStatus() instead of directly
-   * checking invoice.status.
+   * Important:
+   * We compare the actual invoice.status directly
+   * against the selected status.
    *
-   * This means an invoice whose backend status is still
-   * "pending" will appear as "overdue" once its due date
-   * has passed.
+   * This means an invoice whose backend status is
+   * "overdue" will correctly appear when Overdue
+   * is selected.
    */
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
       const searchValue =
         search.toLowerCase().trim();
 
-      const matchesSearch =
-        !searchValue ||
+      const customerName =
         invoice.customerName
           ?.toLowerCase()
-          .includes(searchValue) ||
+          .trim() || "";
+
+      const invoiceNumber =
         invoice.invoiceNumber
           ?.toLowerCase()
-          .includes(searchValue) ||
+          .trim() || "";
+
+      const customerEmail =
         invoice.customerEmail
           ?.toLowerCase()
-          .includes(searchValue);
+          .trim() || "";
 
-      const effectiveStatus =
-        getEffectiveStatus(invoice);
+      const matchesSearch =
+        !searchValue ||
+        customerName.includes(searchValue) ||
+        invoiceNumber.includes(searchValue) ||
+        customerEmail.includes(searchValue);
 
       const matchesStatus =
         statusFilter === "all" ||
-        effectiveStatus ===
-          statusFilter;
+        invoice.status === statusFilter;
 
       const matchesTab =
         tab === "all" ||
@@ -338,8 +281,7 @@ export default function ViewInvoices() {
           !invoice.isScheduled) ||
         (tab === "scheduled" &&
           !invoice.isSent &&
-          invoice.isScheduled ===
-            true) ||
+          invoice.isScheduled === true) ||
         (tab === "sent" &&
           invoice.isSent === true);
 
@@ -379,8 +321,15 @@ export default function ViewInvoices() {
   const sentCount = useMemo(
     () =>
       invoices.filter(
-        (invoice) =>
-          invoice.isSent === true,
+        (invoice) => invoice.isSent === true,
+      ).length,
+    [invoices],
+  );
+
+  const overdueCount = useMemo(
+    () =>
+      invoices.filter(
+        (invoice) => invoice.status === "overdue",
       ).length,
     [invoices],
   );
@@ -430,18 +379,14 @@ export default function ViewInvoices() {
             <div className="flex min-w-max gap-2">
               <TabButton
                 active={tab === "all"}
-                onClick={() =>
-                  setTab("all")
-                }
+                onClick={() => setTab("all")}
               >
                 All
               </TabButton>
 
               <TabButton
                 active={tab === "drafts"}
-                onClick={() =>
-                  setTab("drafts")
-                }
+                onClick={() => setTab("drafts")}
               >
                 Drafts
 
@@ -453,9 +398,7 @@ export default function ViewInvoices() {
               </TabButton>
 
               <TabButton
-                active={
-                  tab === "scheduled"
-                }
+                active={tab === "scheduled"}
                 onClick={() =>
                   setTab("scheduled")
                 }
@@ -471,9 +414,7 @@ export default function ViewInvoices() {
 
               <TabButton
                 active={tab === "sent"}
-                onClick={() =>
-                  setTab("sent")
-                }
+                onClick={() => setTab("sent")}
               >
                 Sent
 
@@ -502,7 +443,8 @@ export default function ViewInvoices() {
               value={statusFilter}
               onChange={(e) =>
                 setStatusFilter(
-                  e.target.value,
+                  e.target
+                    .value as StatusFilter,
                 )
               }
               className="w-full rounded-xl border border-[#EFEAE0] bg-white px-4 py-3 text-sm font-medium text-[#0F1B3D] outline-none transition focus:border-[#1E56CD] md:w-auto"
@@ -521,6 +463,9 @@ export default function ViewInvoices() {
 
               <option value="overdue">
                 Overdue
+                {overdueCount > 0
+                  ? ` (${overdueCount})`
+                  : ""}
               </option>
 
               <option value="cancelled">
@@ -528,6 +473,32 @@ export default function ViewInvoices() {
               </option>
             </select>
           </div>
+
+          {/* =====================================================
+              ACTIVE FILTER MESSAGE
+          ===================================================== */}
+
+          {statusFilter !== "all" && (
+            <div className="mb-5 flex items-center justify-between rounded-xl border border-[#E7DFD0] bg-white px-4 py-3">
+              <p className="text-sm text-[#5B6584]">
+                Showing{" "}
+                <span className="font-semibold text-[#0F1B3D]">
+                  {statusFilter}
+                </span>{" "}
+                invoices
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setStatusFilter("all")
+                }
+                className="text-sm font-semibold text-[#1E56CD] hover:underline"
+              >
+                Clear filter
+              </button>
+            </div>
+          )}
 
           {/* =====================================================
               LOADING
@@ -568,14 +539,15 @@ export default function ViewInvoices() {
           )}
 
           {/* =====================================================
-              EMPTY STATE
+              EMPTY
           ===================================================== */}
 
           {!loading &&
             !error &&
-            filteredInvoices.length ===
-              0 && (
-              <EmptyState />
+            filteredInvoices.length === 0 && (
+              <div className="rounded-[28px] border border-[#EFEAE0] bg-white p-4">
+                <EmptyState />
+              </div>
             )}
 
           {/* =====================================================
@@ -584,33 +556,20 @@ export default function ViewInvoices() {
 
           {!loading &&
             !error &&
-            filteredInvoices.length >
-              0 && (
+            filteredInvoices.length > 0 && (
               <div className="overflow-hidden rounded-[28px] border border-[#EFEAE0] bg-white shadow-[0_15px_45px_rgba(15,27,61,0.05)]">
 
-                {/* Desktop header */}
+                {/* =================================================
+                    DESKTOP TABLE HEADER
+                ================================================= */}
+
                 <div className="hidden border-b border-[#EFEAE0] bg-[#FDF8F2] px-6 py-4 lg:block">
                   <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_170px] items-center gap-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#8A93AC]">
-                    <span>
-                      Client
-                    </span>
-
-                    <span>
-                      Invoice
-                    </span>
-
-                    <span>
-                      Amount
-                    </span>
-
-                    <span>
-                      Due
-                    </span>
-
-                    <span>
-                      Status
-                    </span>
-
+                    <span>Client</span>
+                    <span>Invoice</span>
+                    <span>Amount</span>
+                    <span>Due</span>
+                    <span>Status</span>
                     <span className="text-right">
                       Actions
                     </span>
@@ -618,50 +577,47 @@ export default function ViewInvoices() {
                 </div>
 
                 {/* =================================================
-                    HORIZONTAL MOBILE/TABLET SCROLL
+                    HORIZONTAL SCROLL AREA
+
+                    This is intentionally wide on mobile so
+                    the user can swipe left/right to access
+                    Status and Actions.
                 ================================================= */}
 
-                <div className="overflow-x-auto">
+                <div
+                  className="overflow-x-auto overscroll-x-contain"
+                  style={{
+                    WebkitOverflowScrolling:
+                      "touch",
+                  }}
+                >
                   <div className="min-w-[850px] lg:min-w-0">
                     {filteredInvoices.map(
-                      (
-                        invoice,
-                        index,
-                      ) => (
+                      (invoice, index) => (
                         <InvoiceRow
-                          key={
-                            invoice._id
-                          }
-                          invoice={
-                            invoice
-                          }
+                          key={invoice._id}
+                          invoice={invoice}
                           isLast={
                             index ===
-                            filteredInvoices.length -
-                              1
+                            filteredInvoices.length - 1
                           }
-                          onView={
-                            handleView
-                          }
-                          onEdit={
-                            handleEdit
-                          }
-                          onPaid={
-                            handlePaid
-                          }
-                          onDelete={
-                            handleDelete
-                          }
+                          onView={handleView}
+                          onEdit={handleEdit}
+                          onPaid={handlePaid}
+                          onDelete={handleDelete}
                         />
                       ),
                     )}
                   </div>
                 </div>
 
-                {/* Mobile scroll hint */}
+                {/* =================================================
+                    MOBILE SCROLL HINT
+                ================================================= */}
+
                 <div className="flex items-center justify-center gap-1.5 border-t border-[#EFEAE0] bg-[#FDF8F2] px-4 py-3 text-xs font-medium text-[#8A93AC] lg:hidden">
                   <span>
-                    Swipe horizontally to see all actions
+                    Swipe left or right to see status and actions
                   </span>
 
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -728,9 +684,7 @@ function InvoiceRow({
                   <Mail className="h-3 w-3 shrink-0 text-[#8A93AC]" />
 
                   <p className="max-w-[180px] truncate text-xs text-[#8A93AC]">
-                    {
-                      invoice.customerEmail
-                    }
+                    {invoice.customerEmail}
                   </p>
                 </div>
               )}
@@ -779,7 +733,7 @@ function InvoiceRow({
         </div>
 
         {/* =====================================================
-            DUE
+            DUE DATE
         ===================================================== */}
 
         <div>
@@ -815,7 +769,6 @@ function InvoiceRow({
             isScheduled={
               invoice.isScheduled
             }
-            dueDate={invoice.dueDate}
           />
         </div>
 
@@ -824,8 +777,7 @@ function InvoiceRow({
         ===================================================== */}
 
         <div className="flex items-center justify-end gap-1.5">
-
-          {/* Preview */}
+          {/* View */}
           <ActionButton
             label="View invoice"
             onClick={() =>
@@ -845,9 +797,8 @@ function InvoiceRow({
             <Pencil className="h-4 w-4" />
           </ActionButton>
 
-          {/* Mark as paid */}
-          {invoice.status !==
-            "paid" && (
+          {/* Mark paid */}
+          {invoice.status !== "paid" && (
             <ActionButton
               label="Mark as paid"
               onClick={() =>
@@ -876,133 +827,48 @@ function InvoiceRow({
 }
 
 /* =========================================================
-   EFFECTIVE STATUS
-========================================================= */
-
-function getEffectiveStatus(
-  invoice: Invoice,
-): Invoice["status"] {
-  /*
-   * Paid and cancelled are final states.
-   */
-  if (invoice.status === "paid") {
-    return "paid";
-  }
-
-  if (
-    invoice.status === "cancelled"
-  ) {
-    return "cancelled";
-  }
-
-  /*
-   * Without a due date, use the backend status.
-   */
-  if (!invoice.dueDate) {
-    return invoice.status;
-  }
-
-  const dueDate = new Date(
-    invoice.dueDate,
-  );
-
-  if (
-    Number.isNaN(
-      dueDate.getTime(),
-    )
-  ) {
-    return invoice.status;
-  }
-
-  const now = new Date();
-
-  /*
-   * Compare dates by calendar day,
-   * not exact time.
-   */
-  const today = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-  );
-
-  const due = new Date(
-    dueDate.getFullYear(),
-    dueDate.getMonth(),
-    dueDate.getDate(),
-  );
-
-  if (
-    due < today &&
-    invoice.status !== "paid" &&
-    invoice.status !== "cancelled"
-  ) {
-    return "overdue";
-  }
-
-  return invoice.status;
-}
-
-/* =========================================================
    STATUS BADGE
+
+   This version deliberately avoids the TypeScript narrowing
+   problem that caused TS2367.
 ========================================================= */
 
 function StatusBadge({
   status,
   isSent,
   isScheduled,
-  dueDate,
 }: {
   status: Invoice["status"];
   isSent?: boolean;
   isScheduled?: boolean;
-  dueDate?: string;
 }) {
-  /*
-   * Create the effective status using the same
-   * overdue logic used by the filter.
-   */
-  const effectiveStatus =
-    getEffectiveStatus({
-      _id: "",
-      fileName: "",
-      originalName: "",
-      createdAt: "",
-      status,
-      dueDate,
-      isSent,
-      isScheduled,
-    });
+  const style = statusStyles[status];
 
-  const style =
-    statusStyles[effectiveStatus];
+  let label: string;
 
-  let label =
-    effectiveStatus
-      .charAt(0)
-      .toUpperCase() +
-    effectiveStatus.slice(1);
-
-  /*
-   * Draft and scheduled are special display
-   * states based on sending information.
-   */
-  if (
-    !isSent &&
-    isScheduled
-  ) {
+  if (!isSent && isScheduled) {
     label = "Scheduled";
-  } else if (
-    !isSent &&
-    !isScheduled &&
-    effectiveStatus !==
-      "overdue" &&
-    effectiveStatus !==
-      "paid" &&
-    effectiveStatus !==
-      "cancelled"
-  ) {
+  } else if (!isSent && !isScheduled) {
     label = "Draft";
+  } else {
+    switch (status) {
+      case "paid":
+        label = "Paid";
+        break;
+
+      case "overdue":
+        label = "Overdue";
+        break;
+
+      case "cancelled":
+        label = "Cancelled";
+        break;
+
+      case "pending":
+      default:
+        label = "Pending";
+        break;
+    }
   }
 
   return (
@@ -1035,13 +901,13 @@ function ActionButton({
 }) {
   const variants = {
     default:
-      "bg-[#F7F4ED] text-[#5B6584] hover:bg-[#E8EEFC] hover:text-[#1E56CD]",
+      "bg-[#F7F4ED] text-[#5B6584] hover:bg-[#E8EEFC] hover:text-[#1E56CD] active:bg-[#E8EEFC] active:text-[#1E56CD]",
 
     success:
-      "bg-[#E8EEFC] text-[#1E56CD] hover:bg-[#D6E0FA]",
+      "bg-[#E8EEFC] text-[#1E56CD] hover:bg-[#D6E0FA] active:bg-[#D6E0FA]",
 
     danger:
-      "bg-[#FBE3E0] text-[#C4432E] hover:bg-[#F6D2CD]",
+      "bg-[#FBE3E0] text-[#C4432E] hover:bg-[#F6D2CD] active:bg-[#F6D2CD]",
   };
 
   return (
@@ -1050,7 +916,7 @@ function ActionButton({
       title={label}
       aria-label={label}
       onClick={onClick}
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition active:scale-95 ${variants[variant]}`}
+      className={`flex h-10 w-10 shrink-0 touch-manipulation items-center justify-center rounded-lg transition active:scale-95 ${variants[variant]}`}
     >
       {children}
     </button>
@@ -1074,7 +940,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+      className={`flex min-h-[42px] touch-manipulation items-center rounded-full px-5 py-2.5 text-sm font-semibold transition active:scale-[0.98] ${
         active
           ? "bg-[#1E56CD] text-white shadow-sm"
           : "border border-[#EFEAE0] bg-white text-[#5B6584] hover:bg-[#FDF8F2] hover:text-[#0F1B3D]"
@@ -1106,8 +972,14 @@ function CountBadge({
 ========================================================= */
 
 function getInitials(name: string) {
-  const words =
-    name.trim().split(/\s+/);
+  const words = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "CL";
+  }
 
   if (words.length === 1) {
     return words[0]
@@ -1128,11 +1000,7 @@ function formatDate(date?: string) {
 
   const parsed = new Date(date);
 
-  if (
-    Number.isNaN(
-      parsed.getTime(),
-    )
-  ) {
+  if (Number.isNaN(parsed.getTime())) {
     return "—";
   }
 
@@ -1146,9 +1014,7 @@ function formatDate(date?: string) {
   );
 }
 
-function formatCurrency(
-  amount?: number,
-) {
+function formatCurrency(amount?: number) {
   if (
     amount === undefined ||
     amount === null ||
