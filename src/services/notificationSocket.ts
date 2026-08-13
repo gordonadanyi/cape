@@ -6,10 +6,14 @@ const SOCKET_URL =
 let socket: Socket | null = null;
 
 export function connectNotificationSocket() {
-  const token = localStorage.getItem("token");
+  const token =
+    localStorage.getItem("token");
 
   if (!token) {
-    console.warn("No authentication token found.");
+    console.warn(
+      "No authentication token found.",
+    );
+
     return null;
   }
 
@@ -17,27 +21,38 @@ export function connectNotificationSocket() {
     return socket;
   }
 
-  socket = io(`${SOCKET_URL}/notifications`, {
-    auth: {
-      token,
+  socket = io(
+    `${SOCKET_URL}/notifications`,
+    {
+      auth: {
+        token,
+      },
+
+      transports: ["websocket"],
     },
-    transports: ["websocket"],
-  });
+  );
 
   socket.on("connect", () => {
-    console.log("Connected to Cape notifications");
+    console.log(
+      "Connected to Cape notifications",
+    );
   });
 
   socket.on("disconnect", () => {
-    console.log("Disconnected from Cape notifications");
-  });
-
-  socket.on("connect_error", (error) => {
-    console.error(
-      "Notification WebSocket error:",
-      error.message,
+    console.log(
+      "Disconnected from Cape notifications",
     );
   });
+
+  socket.on(
+    "connect_error",
+    (error) => {
+      console.error(
+        "Notification WebSocket error:",
+        error.message,
+      );
+    },
+  );
 
   return socket;
 }
