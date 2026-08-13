@@ -13,38 +13,11 @@ import AppShell from "../components/AppShell";
 
 import type { Invoice } from "./viewInvoices";
 
-import {
-  connectNotificationSocket,
-  disconnectNotificationSocket,
-} from "../services/notificationSocket";
-
-const MONTH_LABELS = [
-  "J",
-  "F",
-  "M",
-  "A",
-  "M",
-  "J",
-  "J",
-  "A",
-  "S",
-  "O",
-  "N",
-  "D",
-];
-
-type NotificationPayload = {
-  _id?: string;
-  id?: string;
-  type?: string;
-  title?: string;
-  message?: string;
-  invoiceId?: string;
-  isRead?: boolean;
-  createdAt?: string;
-};
+const MONTH_LABELS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 
 function Dashboard() {
+  const navigate = useNavigate();
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,6 +101,14 @@ function Dashboard() {
   // INVOICES
   // =========================================================
 
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  /*
+   * =========================================================
+   * LOAD INVOICES
+   * =========================================================
+   */
+
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -136,11 +117,7 @@ function Dashboard() {
     try {
       setLoading(true);
       setError(null);
-
-      const res = await api.get<Invoice[]>(
-        "/invoices/all",
-      );
-
+      const res = await api.get<Invoice[]>("/invoices/all");
       setInvoices(res.data);
     } catch (err) {
       setError(
@@ -157,6 +134,127 @@ function Dashboard() {
   // =========================================================
   // DASHBOARD STATISTICS
   // =========================================================
+
+  /*
+   * =========================================================
+   * LOAD INITIAL UNREAD NOTIFICATION COUNT
+   * =========================================================
+   */
+
+  useEffect(() => {
+    fetchUnreadCount();
+  }, []);
+
+  async function fetchUnreadCount() {
+    try {
+      const res = await api.get(
+        "/notifications/unread/count",
+      );
+
+      /*
+       * Supports either:
+       *
+       * { count: 5 }
+       *
+       * or
+       *
+       * { unreadCount: 5 }
+       *
+       * depending on your controller response.
+       */
+
+      const count =
+        res.data?.count ??
+        res.data?.unreadCount ??
+        0;
+
+      setUnreadCount(Number(count) || 0);
+    } catch (err) {
+      /*
+       * Don't break the dashboard if the notification
+       * endpoint isn't available yet.
+       */
+      console.warn(
+        "Could not load unread notification count.",
+        err,
+      );
+    }
+  }
+
+  /*
+   * =========================================================
+   * REAL-TIME NOTIFICATIONS
+   * =========================================================
+   */
+
+  useEffect(() => {
+    const socket =
+      connectNotificationSocket();
+
+    if (!socket) {
+      return;
+    }
+
+    const handleNotification = (
+      notification: unknown,
+    ) => {
+      console.log(
+        "New Cape notification:",
+        notification,
+      );
+
+      /*
+       * A new notification means the unread count
+       * increases immediately.
+       */
+      setUnreadCount((current) => current + 1);
+    };
+
+    socket.on(
+      "notification",
+      handleNotification,
+    );
+
+    /*
+     * In case the socket was already connected before
+     * this Dashboard mounted.
+     */
+    const existingSocket =
+      getNotificationSocket();
+
+    if (
+      existingSocket &&
+      existingSocket !== socket
+    ) {
+      existingSocket.on(
+        "notification",
+        handleNotification,
+      );
+    }
+
+    return () => {
+      socket.off(
+        "notification",
+        handleNotification,
+      );
+
+      if (
+        existingSocket &&
+        existingSocket !== socket
+      ) {
+        existingSocket.off(
+          "notification",
+          handleNotification,
+        );
+      }
+    };
+  }, []);
+
+  /*
+   * =========================================================
+   * DASHBOARD STATISTICS
+   * =========================================================
+   */
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -179,28 +277,24 @@ function Dashboard() {
     let totalOutstanding = 0;
     let totalInvoiced = 0;
     let totalReceived = 0;
+
     let receivedThisMonth = 0;
     let receivedLastMonth = 0;
+
     let overdueCount = 0;
     let oldestOverdueDays = 0;
+
     let fastestPaymentDays: number | null = null;
 
     const monthlyCounts = new Array(12).fill(0);
 
     for (const invoice of invoices) {
-      const isUnpaid =
-        invoice.status !== "paid" &&
-        invoice.status !== "cancelled";
-
-      const isCancelled =
-        invoice.status === "cancelled";
-
-      // -------------------------------------------------------
-      // TOTAL INVOICED
-      // -------------------------------------------------------
+      const isUnpaid = invoice.status !== "paid" && invoice.status !== "cancelled";
+      const isCancelled = invoice.status === "cancelled";
 
       if (invoice.isSent && !isCancelled) {
-        totalInvoiced += invoice.amountDue ?? 0;
+        totalInvoiced +=
+          invoice.amountDue ?? 0;
 
         if (invoice.sentAt) {
           const sentDate = new Date(
@@ -218,19 +312,11 @@ function Dashboard() {
         }
       }
 
-      // -------------------------------------------------------
-      // OUTSTANDING / OVERDUE
-      // -------------------------------------------------------
-
       if (isUnpaid && !isCancelled) {
         totalOutstanding +=
           invoice.amountDue ?? 0;
 
-        if (
-          invoice.isSent &&
-          invoice.dueDate &&
-          new Date(invoice.dueDate) < today
-        ) {
+        if (invoice.isSent && invoice.dueDate && new Date(invoice.dueDate) < today) {
           overdueCount++;
 
           const daysLate = Math.floor(
@@ -240,17 +326,9 @@ function Dashboard() {
               ).getTime()) /
               86_400_000,
           );
-
-          oldestOverdueDays = Math.max(
-            oldestOverdueDays,
-            daysLate,
-          );
+          oldestOverdueDays = Math.max(oldestOverdueDays, daysLate);
         }
       }
-
-      // -------------------------------------------------------
-      // PAID
-      // -------------------------------------------------------
 
       if (invoice.status === "paid") {
         const amount =
@@ -261,21 +339,10 @@ function Dashboard() {
         totalReceived += amount;
 
         if (invoice.paidAt) {
-          const paidDate = new Date(
-            invoice.paidAt,
-          );
-
-          // Received this month
-          if (
-            paidDate.getFullYear() ===
-              thisYear &&
-            paidDate.getMonth() ===
-              thisMonth
-          ) {
+          const paidDate = new Date(invoice.paidAt);
+          if (paidDate.getFullYear() === thisYear && paidDate.getMonth() === thisMonth) {
             receivedThisMonth += amount;
           }
-
-          // Received last month
           if (
             paidDate.getFullYear() ===
               lastMonthDate.getFullYear() &&
@@ -285,7 +352,6 @@ function Dashboard() {
             receivedLastMonth += amount;
           }
 
-          // Fastest payment
           if (invoice.sentAt) {
             const days = Math.floor(
               (paidDate.getTime() -
@@ -294,12 +360,7 @@ function Dashboard() {
                 ).getTime()) /
                 86_400_000,
             );
-
-            if (
-              days >= 0 &&
-              (fastestPaymentDays === null ||
-                days < fastestPaymentDays)
-            ) {
+            if (days >= 0 && (fastestPaymentDays === null || days < fastestPaymentDays)) {
               fastestPaymentDays = days;
             }
           }
@@ -311,18 +372,14 @@ function Dashboard() {
     // COLLECTION RATE
     // -------------------------------------------------------
 
-    const collectionRate =
-      totalInvoiced > 0
-        ? Math.round(
-            (totalReceived /
-              totalInvoiced) *
-              100,
-          )
-        : 0;
+    /*
+     * =====================================================
+     * COLLECTION RATE
+     * =====================================================
+     */
 
-    // -------------------------------------------------------
-    // MONTH TREND
-    // -------------------------------------------------------
+    const collectionRate =
+      totalInvoiced > 0 ? Math.round((totalReceived / totalInvoiced) * 100) : 0;
 
     const monthTrend =
       receivedLastMonth > 0
@@ -348,29 +405,12 @@ function Dashboard() {
     };
   }, [invoices]);
 
-  const maxMonthlyCount = Math.max(
-    ...stats.monthlyCounts,
-    1,
-  );
-
-  const totalSentThisYear =
-    stats.monthlyCounts.reduce(
-      (a, b) => a + b,
-      0,
-    );
-
-  // =========================================================
-  // UI
-  // =========================================================
+  const maxMonthlyCount = Math.max(...stats.monthlyCounts, 1);
+  const totalSentThisYear = stats.monthlyCounts.reduce((a, b) => a + b, 0);
 
   return (
     <AppShell>
       <div className="p-6">
-
-        {/* ===================================================
-            HEADER
-        =================================================== */}
-
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-medium text-[#0F1B3D]">
@@ -388,35 +428,14 @@ function Dashboard() {
               )}
             </p>
           </div>
-
-          {/* =================================================
-              NOTIFICATION BUTTON
-          ================================================= */}
-
           <button
             type="button"
             title="Notifications"
-            aria-label="Notifications"
-            onClick={() =>
-              navigate("/notifications")
-            }
-            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#EFEAE0] bg-white text-[#5B6584] transition hover:text-[#1E56CD]"
+            className="flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#EFEAE0] bg-white text-[#5B6584] transition hover:text-[#1E56CD]"
           >
             <Bell className="h-[18px] w-[18px]" />
-
-            {unreadCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
-                {unreadCount > 99
-                  ? "99+"
-                  : unreadCount}
-              </span>
-            )}
           </button>
         </div>
-
-        {/* ===================================================
-            ERROR
-        =================================================== */}
 
         {error && (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">
@@ -424,14 +443,8 @@ function Dashboard() {
           </div>
         )}
 
-        {/* ===================================================
-            STAT CARDS
-        =================================================== */}
-
+        {/* Stat cards */}
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-
-          {/* Outstanding */}
-
           <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
             <p className="text-xs text-[#8A93AC]">
               Outstanding
@@ -456,31 +469,22 @@ function Dashboard() {
                 ? "—"
                 : `₦${stats.receivedThisMonth.toLocaleString()}`}
             </p>
-
-            {!loading &&
-              stats.monthTrend !== null && (
-                <div className="mt-1 flex items-center gap-1">
-
-                  {stats.monthTrend >= 0 ? (
-                    <ArrowUpRight className="h-3.5 w-3.5 text-[#3B6D11]" />
-                  ) : (
-                    <ArrowDownRight className="h-3.5 w-3.5 text-[#C4432E]" />
-                  )}
-
-                  <span
-                    className={`text-[11px] font-medium ${
-                      stats.monthTrend >= 0
-                        ? "text-[#3B6D11]"
-                        : "text-[#C4432E]"
-                    }`}
-                  >
-                    {Math.abs(
-                      stats.monthTrend,
-                    )}
-                    % vs last month
-                  </span>
-                </div>
-              )}
+            {!loading && stats.monthTrend !== null && (
+              <div className="mt-1 flex items-center gap-1">
+                {stats.monthTrend >= 0 ? (
+                  <ArrowUpRight className="h-3.5 w-3.5 text-[#3B6D11]" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5 text-[#C4432E]" />
+                )}
+                <span
+                  className={`text-[11px] font-medium ${
+                    stats.monthTrend >= 0 ? "text-[#3B6D11]" : "text-[#C4432E]"
+                  }`}
+                >
+                  {Math.abs(stats.monthTrend)}% vs last month
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Overdue */}
@@ -517,14 +521,8 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* ===================================================
-            COLLECTION RATE + YEARLY CHART
-        =================================================== */}
-
+        {/* Collection rate + yearly chart */}
         <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-[180px_1fr]">
-
-          {/* Collection rate */}
-
           <div className="flex flex-col items-center justify-center rounded-xl border border-[#EFEAE0] bg-white p-4">
 
             <p className="mb-3 self-start text-[13px] font-medium text-[#0F1B3D]">
@@ -549,8 +547,6 @@ function Dashboard() {
             </p>
           </div>
 
-          {/* Year chart */}
-
           <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
 
             <div className="mb-3.5 flex items-baseline justify-between">
@@ -558,115 +554,67 @@ function Dashboard() {
               <p className="text-[13px] font-medium text-[#0F1B3D]">
                 Invoices sent this year
               </p>
-
-              <p className="text-[11px] text-[#8A93AC]">
-                {totalSentThisYear} total
-              </p>
-
+              <p className="text-[11px] text-[#8A93AC]">{totalSentThisYear} total</p>
             </div>
 
             <div className="flex h-[90px] items-end gap-1.5">
-
-              {stats.monthlyCounts.map(
-                (count, i) => {
-
-                  const isFuture =
-                    i >
-                    stats.currentMonthIndex;
-
-                  const isCurrent =
-                    i ===
-                    stats.currentMonthIndex;
-
-                  const height = isFuture
+              {stats.monthlyCounts.map((count, i) => {
+                const isFuture = i > stats.currentMonthIndex;
+                const isCurrent = i === stats.currentMonthIndex;
+                const height = isFuture
+                  ? 6
+                  : count === 0
                     ? 6
-                    : count === 0
-                      ? 6
-                      : Math.max(
-                          8,
-                          (count /
-                            maxMonthlyCount) *
-                            74,
-                        );
+                    : Math.max(8, (count / maxMonthlyCount) * 74);
 
-                  return (
+                return (
+                  <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
                     <div
-                      key={i}
-                      className="flex flex-1 flex-col items-center gap-1.5"
+                      className="w-full rounded"
+                      style={{
+                        height,
+                        backgroundColor: isFuture
+                          ? "#F3F0E8"
+                          : isCurrent
+                            ? "#1E56CD"
+                            : "#E7EEFB",
+                      }}
+                      title={`${count} invoice${count === 1 ? "" : "s"}`}
+                    />
+                    <span
+                      className={`text-[10px] ${
+                        isCurrent
+                          ? "font-medium text-[#1E56CD]"
+                          : isFuture
+                            ? "text-[#C7C2B5]"
+                            : "text-[#8A93AC]"
+                      }`}
                     >
-
-                      <div
-                        className="w-full rounded"
-                        style={{
-                          height,
-                          backgroundColor:
-                            isFuture
-                              ? "#F3F0E8"
-                              : isCurrent
-                                ? "#1E56CD"
-                                : "#E7EEFB",
-                        }}
-                        title={`${count} invoice${
-                          count === 1
-                            ? ""
-                            : "s"
-                        }`}
-                      />
-
-                      <span
-                        className={`text-[10px] ${
-                          isCurrent
-                            ? "font-medium text-[#1E56CD]"
-                            : isFuture
-                              ? "text-[#C7C2B5]"
-                              : "text-[#8A93AC]"
-                        }`}
-                      >
-                        {MONTH_LABELS[i]}
-                      </span>
-
-                    </div>
-                  );
-                },
-              )}
-
+                      {MONTH_LABELS[i]}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* ===================================================
-            THIS MONTH
-        =================================================== */}
-
+        {/* This month facts */}
         <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
-
-          <p className="mb-3 text-[13px] font-medium text-[#0F1B3D]">
-            This month
-          </p>
-
+          <p className="mb-3 text-[13px] font-medium text-[#0F1B3D]">This month</p>
           <div className="flex flex-col gap-2.5 text-[13px] text-[#5B6584]">
 
             <div className="flex items-center gap-2.5">
 
               <Bell className="h-4 w-4 text-[#1E56CD]" />
-
-              {
-                stats.monthlyCounts[
-                  stats.currentMonthIndex
-                ]
-              }{" "}
-              invoices sent
-
+              {stats.monthlyCounts[stats.currentMonthIndex]} invoices sent
             </div>
 
             {stats.overdueCount > 0 && (
               <div className="flex items-center gap-2.5">
 
                 <AlertTriangle className="h-4 w-4 text-[#C4432E]" />
-
-                {stats.overdueCount} overdue
-                right now
-
+                {stats.overdueCount} overdue right now
               </div>
             )}
 
@@ -675,14 +623,8 @@ function Dashboard() {
               <div className="flex items-center gap-2.5">
 
                 <ArrowUpRight className="h-4 w-4 text-[#1E56CD]" />
-
-                Fastest payment:{" "}
-                {stats.fastestPaymentDays} day
-                {stats.fastestPaymentDays ===
-                1
-                  ? ""
-                  : "s"}
-
+                Fastest payment: {stats.fastestPaymentDays} day
+                {stats.fastestPaymentDays === 1 ? "" : "s"}
               </div>
             )}
 
