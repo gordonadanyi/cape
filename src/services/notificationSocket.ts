@@ -18,8 +18,22 @@ export interface NotificationPayload {
   updatedAt?: string;
 }
 
+export interface ActivityPayload {
+  _id?: string;
+  userId?: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  invoiceId?: string;
+  paymentReference?: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export function connectNotificationSocket(
   onNotification?: (notification: NotificationPayload) => void,
+  onActivity?: (activity: ActivityPayload) => void,
 ) {
   const token = localStorage.getItem("token");
 
@@ -36,6 +50,10 @@ export function connectNotificationSocket(
     if (onNotification) {
       socket.off("notification");
       socket.on("notification", onNotification);
+    }
+    if (onActivity) {
+      socket.off("activity");
+      socket.on("activity", onActivity);
     }
 
     return socket;
@@ -63,6 +81,17 @@ export function connectNotificationSocket(
 
     if (onNotification) {
       onNotification(notification);
+    }
+  });
+
+  socket.on("activity", (activity: ActivityPayload) => {
+    console.log(
+      "New Cape activity:",
+      activity,
+    );
+
+    if (onActivity) {
+      onActivity(activity);
     }
   });
 

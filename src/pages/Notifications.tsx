@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   Bell,
   Check,
@@ -12,31 +11,8 @@ import {
 } from "lucide-react";
 
 import AppShell from "../components/AppShell";
-import api from "../api/axios";
-
-interface Activity {
-  _id: string;
-  userId: string;
-  type: string;
-  title: string;
-  description: string;
-  invoiceId?: string;
-  paymentReference?: string;
-  metadata?: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface Notification {
-  _id: string;
-  userId: string;
-  type: string;
-  title: string;
-  message?: string;
-  description?: string;
-  read?: boolean;
-  createdAt: string;
-}
+import { useNotifications } from "../context/NotificationContext";
+import { useState } from "react";
 
 function getActivityIcon(type: string) {
   switch (type) {
@@ -80,93 +56,18 @@ function formatTime(dateString: string) {
 }
 
 function Notifications() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"activity" | "notifications">(
-    "activity",
-  );
-  const [error, setError] = useState<string | null>(null);
+  const {
+    activities,
+    notifications,
+    loading,
+    markNotificationAsRead,
+    markAllAsRead,
+    deleteActivity,
+  } = useNotifications();
 
-  async function fetchActivities() {
-    try {
-      const response = await api.get<Activity[]>("/activities");
-
-      setActivities(response.data || []);
-    } catch (err) {
-      console.error("Failed to load activities:", err);
-      setError("Failed to load activities.");
-    }
-  }
-
-  async function fetchNotifications() {
-    try {
-      const response = await api.get<Notification[]>("/notifications");
-
-      setNotifications(response.data || []);
-    } catch (err) {
-      console.error("Failed to load notifications:", err);
-    }
-  }
-
-  async function loadData() {
-    setLoading(true);
-    setError(null);
-
-    await Promise.all([
-      fetchActivities(),
-      fetchNotifications(),
-    ]);
-
-    setLoading(false);
-  }
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function markNotificationAsRead(id: string) {
-    try {
-      await api.patch(`/notifications/${id}/read`);
-
-      setNotifications((current) =>
-        current.map((notification) =>
-          notification._id === id
-            ? { ...notification, read: true }
-            : notification,
-        ),
-      );
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
-    }
-  }
-
-  async function markAllAsRead() {
-    try {
-      await api.patch("/notifications/read-all");
-
-      setNotifications((current) =>
-        current.map((notification) => ({
-          ...notification,
-          read: true,
-        })),
-      );
-    } catch (err) {
-      console.error("Failed to mark notifications as read:", err);
-    }
-  }
-
-  async function deleteActivity(id: string) {
-    try {
-      await api.delete(`/activities/${id}`);
-
-      setActivities((current) =>
-        current.filter((activity) => activity._id !== id),
-      );
-    } catch (err) {
-      console.error("Failed to delete activity:", err);
-    }
-  }
+  const [activeTab, setActiveTab] = useState<
+    "activity" | "notifications"
+  >("activity");
 
   return (
     <AppShell>
@@ -184,7 +85,7 @@ function Notifications() {
           </div>
 
           {activeTab === "notifications" &&
-            notifications.some((notification) => !notification.read) && (
+            notifications.some((notification) => !notification.isRead) && (
               <button
                 type="button"
                 onClick={markAllAsRead}
@@ -222,13 +123,6 @@ function Notifications() {
             Notifications
           </button>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700">
-            {error}
-          </div>
-        )}
 
         {/* Loading */}
         {loading ? (
@@ -326,7 +220,7 @@ function Notifications() {
                     key={notification._id}
                     type="button"
                     onClick={() => {
-                      if (!notification.read) {
+                      if (!notification.isRead) {
                         markNotificationAsRead(notification._id);
                       }
                     }}
@@ -339,7 +233,7 @@ function Notifications() {
                     <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E7EEFB] text-[#1E56CD]">
                       <Bell className="h-4 w-4" />
 
-                      {!notification.read && (
+                      {!notification.isRead && (
                         <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-[#1E56CD]" />
                       )}
                     </div>
@@ -347,7 +241,7 @@ function Notifications() {
                     <div className="min-w-0 flex-1">
                       <p
                         className={`text-[13px] ${
-                          notification.read
+                          notification.isRead
                             ? "font-medium text-[#5B6584]"
                             : "font-semibold text-[#0F1B3D]"
                         }`}
@@ -356,9 +250,7 @@ function Notifications() {
                       </p>
 
                       <p className="mt-1 text-[12px] leading-5 text-[#6B7280]">
-                        {notification.message ||
-                          notification.description ||
-                          ""}
+                        {notification.message || ""}
                       </p>
 
                       <p className="mt-2 text-[11px] text-[#A0A6B5]">

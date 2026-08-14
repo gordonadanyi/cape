@@ -9,24 +9,27 @@ import SettingsPage from "./pages/Settings";
 import ReviewInvoice from "./pages/ReviewInvoice";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Notifications from "./pages/Notifications";
+import { NotificationProvider } from "./context/NotificationContext";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/new-invoice" element={<NewInvoicePage />} />
-      <Route path="/view-invoices" element={<ViewInvoicePage />} />
-      <Route path="/settings/*" element={<SettingsPage />} />
-      <Route path="/review/:id" element={<ReviewInvoice />} />
-      <Route path="/payment/success" element={<PaymentSuccess />} />
-      <Route
-  path="/notifications"
-  element={<Notifications />}
-/>
-    </Routes>
+    <NotificationProvider>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/new-invoice" element={<NewInvoicePage />} />
+        <Route path="/view-invoices" element={<ViewInvoicePage />} />
+        <Route path="/settings/*" element={<SettingsPage />} />
+        <Route path="/review/:id" element={<ReviewInvoice />} />
+        <Route path="/payment/success" element={<PaymentSuccess />} />
+        <Route
+          path="/notifications"
+          element={<Notifications />}
+        />
+      </Routes>
+    </NotificationProvider>
   );
 }
 

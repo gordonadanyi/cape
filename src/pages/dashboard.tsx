@@ -11,12 +11,7 @@ import api from "../api/axios";
 import { getErrorMessage } from "../utils/getErrorMessage";
 import AppShell from "../components/AppShell";
 import type { Invoice } from "./viewInvoices";
-
-import {
-  connectNotificationSocket,
-  disconnectNotificationSocket,
-  type NotificationPayload,
-} from "../services/notificationSocket";
+import { useNotifications } from "../context/NotificationContext";
 
 const MONTH_LABELS = [
   "J",
@@ -43,66 +38,12 @@ function Dashboard() {
   const [error, setError] = useState<string | null>(null);
 
   // =========================================================
-  // NOTIFICATIONS
+  // NOTIFICATIONS (shared app-wide via NotificationContext)
   // =========================================================
 
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { unreadCount } = useNotifications();
 
   const navigate = useNavigate();
-
-  // =========================================================
-  // FETCH UNREAD NOTIFICATION COUNT
-  // =========================================================
-
-  async function fetchUnreadCount() {
-    try {
-      const response = await api.get(
-        "/notifications/unread/count",
-      );
-
-      const count =
-        response.data?.count ??
-        response.data?.unreadCount ??
-        0;
-
-      setUnreadCount(Number(count));
-    } catch (err) {
-      console.error(
-        "Failed to load unread notification count:",
-        err,
-      );
-    }
-  }
-
-  // =========================================================
-  // CONNECT NOTIFICATION WEBSOCKET
-  // =========================================================
-
-  useEffect(() => {
-    // Load the existing unread count first.
-    fetchUnreadCount();
-
-    // Connect to the notification WebSocket.
-    const socket = connectNotificationSocket(
-      (notification: NotificationPayload) => {
-        console.log(
-          "New real-time notification:",
-          notification,
-        );
-
-        // Increase the notification badge immediately.
-        setUnreadCount((previous) => previous + 1);
-      },
-    );
-
-    return () => {
-      if (socket) {
-        socket.off("notification");
-      }
-
-      disconnectNotificationSocket();
-    };
-  }, []);
 
   // =========================================================
   // FETCH INVOICES
