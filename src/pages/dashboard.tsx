@@ -13,7 +13,33 @@ import AppShell from "../components/AppShell";
 
 import type { Invoice } from "./viewInvoices";
 
+<<<<<<< HEAD
 const MONTH_LABELS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+=======
+import {
+  connectNotificationSocket,
+<<<<<<< HEAD
+  getNotificationSocket,
+=======
+  disconnectNotificationSocket,
+>>>>>>> 73d4ecf (Websocket integration)
+} from "../services/notificationSocket";
+
+const MONTH_LABELS = [
+  "J",
+  "F",
+  "M",
+  "A",
+  "M",
+  "J",
+  "J",
+  "A",
+  "S",
+  "O",
+  "N",
+  "D",
+];
+>>>>>>> d56a850 (Websocket integration)
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -22,6 +48,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+<<<<<<< HEAD
   // =========================================================
   // NOTIFICATIONS
   // =========================================================
@@ -101,6 +128,9 @@ function Dashboard() {
   // INVOICES
   // =========================================================
 
+=======
+<<<<<<< HEAD
+>>>>>>> d56a850 (Websocket integration)
   const [unreadCount, setUnreadCount] = useState(0);
 
   /*
@@ -108,6 +138,78 @@ function Dashboard() {
    * LOAD INVOICES
    * =========================================================
    */
+=======
+  // =========================================================
+  // NOTIFICATIONS
+  // =========================================================
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const navigate = useNavigate();
+
+  /**
+   * Load the current unread notification count.
+   */
+  async function fetchUnreadCount() {
+    try {
+      const response = await api.get("/notifications/unread/count");
+
+      /**
+       * Supports either:
+       *
+       * { count: 5 }
+       *
+       * or
+       *
+       * { unreadCount: 5 }
+       */
+      const count =
+        response.data?.count ??
+        response.data?.unreadCount ??
+        0;
+
+      setUnreadCount(Number(count));
+    } catch (err) {
+      console.error(
+        "Failed to load unread notification count:",
+        err,
+      );
+    }
+  }
+
+  /**
+   * Connect to notification WebSocket.
+   *
+   * Whenever the backend sends a new notification,
+   * increase the unread badge immediately.
+   */
+  useEffect(() => {
+    fetchUnreadCount();
+
+    const socket = connectNotificationSocket(
+      (notification) => {
+        console.log(
+          "New real-time notification:",
+          notification,
+        );
+
+        setUnreadCount((previous) => previous + 1);
+      },
+    );
+
+    return () => {
+      disconnectNotificationSocket();
+
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, []);
+
+  // =========================================================
+  // INVOICES
+  // =========================================================
+>>>>>>> 73d4ecf (Websocket integration)
 
   useEffect(() => {
     fetchInvoices();
@@ -117,7 +219,19 @@ function Dashboard() {
     try {
       setLoading(true);
       setError(null);
+<<<<<<< HEAD
       const res = await api.get<Invoice[]>("/invoices/all");
+=======
+
+<<<<<<< HEAD
+      const res = await api.get<Invoice[]>("/invoices/all");
+=======
+      const res = await api.get<Invoice[]>(
+        "/invoices/all",
+      );
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
       setInvoices(res.data);
     } catch (err) {
       setError(
@@ -131,10 +245,14 @@ function Dashboard() {
     }
   }
 
+<<<<<<< HEAD
   // =========================================================
   // DASHBOARD STATISTICS
   // =========================================================
 
+=======
+<<<<<<< HEAD
+>>>>>>> d56a850 (Websocket integration)
   /*
    * =========================================================
    * LOAD INITIAL UNREAD NOTIFICATION COUNT
@@ -255,6 +373,11 @@ function Dashboard() {
    * DASHBOARD STATISTICS
    * =========================================================
    */
+=======
+  // =========================================================
+  // DASHBOARD STATISTICS
+  // =========================================================
+>>>>>>> 73d4ecf (Websocket integration)
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -289,8 +412,29 @@ function Dashboard() {
     const monthlyCounts = new Array(12).fill(0);
 
     for (const invoice of invoices) {
+<<<<<<< HEAD
       const isUnpaid = invoice.status !== "paid" && invoice.status !== "cancelled";
       const isCancelled = invoice.status === "cancelled";
+=======
+      const isUnpaid =
+        invoice.status !== "paid" &&
+        invoice.status !== "cancelled";
+
+      const isCancelled =
+        invoice.status === "cancelled";
+
+<<<<<<< HEAD
+      /*
+       * =====================================================
+       * INVOICED
+       * =====================================================
+       */
+=======
+      // -------------------------------------------------------
+      // TOTAL INVOICED
+      // -------------------------------------------------------
+>>>>>>> 73d4ecf (Websocket integration)
+>>>>>>> d56a850 (Websocket integration)
 
       if (invoice.isSent && !isCancelled) {
         totalInvoiced +=
@@ -312,11 +456,39 @@ function Dashboard() {
         }
       }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+      /*
+       * =====================================================
+       * OUTSTANDING / OVERDUE
+       * =====================================================
+       */
+=======
+      // -------------------------------------------------------
+      // OUTSTANDING / OVERDUE
+      // -------------------------------------------------------
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
       if (isUnpaid && !isCancelled) {
         totalOutstanding +=
           invoice.amountDue ?? 0;
 
+<<<<<<< HEAD
         if (invoice.isSent && invoice.dueDate && new Date(invoice.dueDate) < today) {
+=======
+        if (
+          invoice.isSent &&
+          invoice.dueDate &&
+<<<<<<< HEAD
+          new Date(invoice.dueDate) <
+            today
+=======
+          new Date(invoice.dueDate) < today
+>>>>>>> 73d4ecf (Websocket integration)
+        ) {
+>>>>>>> d56a850 (Websocket integration)
           overdueCount++;
 
           const daysLate = Math.floor(
@@ -325,11 +497,35 @@ function Dashboard() {
                 invoice.dueDate,
               ).getTime()) /
               86_400_000,
+<<<<<<< HEAD
           );
           oldestOverdueDays = Math.max(oldestOverdueDays, daysLate);
         }
       }
 
+<<<<<<< HEAD
+=======
+      /*
+       * =====================================================
+       * PAID
+       * =====================================================
+       */
+=======
+          );
+
+          oldestOverdueDays = Math.max(
+            oldestOverdueDays,
+            daysLate,
+          );
+        }
+      }
+
+      // -------------------------------------------------------
+      // PAID
+      // -------------------------------------------------------
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
       if (invoice.status === "paid") {
         const amount =
           invoice.amountPaid ??
@@ -360,26 +556,75 @@ function Dashboard() {
                 ).getTime()) /
                 86_400_000,
             );
+<<<<<<< HEAD
             if (days >= 0 && (fastestPaymentDays === null || days < fastestPaymentDays)) {
               fastestPaymentDays = days;
+=======
+
+            if (
+              days >= 0 &&
+              (fastestPaymentDays === null ||
+<<<<<<< HEAD
+                days <
+                  fastestPaymentDays)
+            ) {
+              fastestPaymentDays =
+                days;
+=======
+                days < fastestPaymentDays)
+            ) {
+              fastestPaymentDays = days;
+>>>>>>> 73d4ecf (Websocket integration)
+>>>>>>> d56a850 (Websocket integration)
             }
           }
         }
       }
     }
 
+<<<<<<< HEAD
     // -------------------------------------------------------
     // COLLECTION RATE
     // -------------------------------------------------------
 
+=======
+<<<<<<< HEAD
+>>>>>>> d56a850 (Websocket integration)
     /*
      * =====================================================
      * COLLECTION RATE
      * =====================================================
      */
+=======
+    // -------------------------------------------------------
+    // COLLECTION RATE
+    // -------------------------------------------------------
+>>>>>>> 73d4ecf (Websocket integration)
 
     const collectionRate =
+<<<<<<< HEAD
       totalInvoiced > 0 ? Math.round((totalReceived / totalInvoiced) * 100) : 0;
+=======
+      totalInvoiced > 0
+        ? Math.round(
+            (totalReceived /
+              totalInvoiced) *
+              100,
+          )
+        : 0;
+
+<<<<<<< HEAD
+    /*
+     * =====================================================
+     * MONTHLY TREND
+     * =====================================================
+     */
+=======
+    // -------------------------------------------------------
+    // MONTH TREND
+    // -------------------------------------------------------
+>>>>>>> 73d4ecf (Websocket integration)
+>>>>>>> d56a850 (Websocket integration)
 
     const monthTrend =
       receivedLastMonth > 0
@@ -411,6 +656,19 @@ function Dashboard() {
   return (
     <AppShell>
       <div className="p-6">
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+        {/* =================================================
+            HEADER
+        ================================================= */}
+=======
+        {/* ===================================================
+            HEADER
+        =================================================== */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-medium text-[#0F1B3D]">
@@ -428,6 +686,7 @@ function Dashboard() {
               )}
             </p>
           </div>
+<<<<<<< HEAD
           <button
             type="button"
             title="Notifications"
@@ -437,13 +696,87 @@ function Dashboard() {
           </button>
         </div>
 
+=======
+
+          {/* =================================================
+<<<<<<< HEAD
+              NOTIFICATION BELL
+=======
+              NOTIFICATION BUTTON
+>>>>>>> 73d4ecf (Websocket integration)
+          ================================================= */}
+
+          <button
+            type="button"
+            title="Notifications"
+<<<<<<< HEAD
+            aria-label={`Notifications${
+              unreadCount > 0
+                ? `, ${unreadCount} unread`
+                : ""
+            }`}
+            onClick={() =>
+              navigate("/notifications")
+            }
+            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#EFEAE0] bg-white text-[#5B6584] transition hover:text-[#1E56CD] active:scale-95"
+          >
+            <Bell className="h-[18px] w-[18px]" />
+
+            {/* UNREAD BADGE */}
+
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm">
+=======
+            aria-label="Notifications"
+            onClick={() =>
+              navigate("/notifications")
+            }
+            className="relative flex h-[38px] w-[38px] items-center justify-center rounded-full border border-[#EFEAE0] bg-white text-[#5B6584] transition hover:text-[#1E56CD]"
+          >
+            <Bell className="h-[18px] w-[18px]" />
+
+            {unreadCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex min-h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+>>>>>>> 73d4ecf (Websocket integration)
+                {unreadCount > 99
+                  ? "99+"
+                  : unreadCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+<<<<<<< HEAD
+        {/* =================================================
+            ERROR
+        ================================================= */}
+=======
+        {/* ===================================================
+            ERROR
+        =================================================== */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
         {error && (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-700">
             {error}
           </div>
         )}
 
+<<<<<<< HEAD
         {/* Stat cards */}
+=======
+<<<<<<< HEAD
+        {/* =================================================
+            STAT CARDS
+        ================================================= */}
+=======
+        {/* ===================================================
+            STAT CARDS
+        =================================================== */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
             <p className="text-xs text-[#8A93AC]">
@@ -521,7 +854,20 @@ function Dashboard() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* Collection rate + yearly chart */}
+=======
+<<<<<<< HEAD
+        {/* =================================================
+            COLLECTION RATE + YEARLY CHART
+        ================================================= */}
+=======
+        {/* ===================================================
+            COLLECTION + CHART
+        =================================================== */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
         <div className="mb-3 grid grid-cols-1 gap-3 md:grid-cols-[180px_1fr]">
           <div className="flex flex-col items-center justify-center rounded-xl border border-[#EFEAE0] bg-white p-4">
 
@@ -547,6 +893,15 @@ function Dashboard() {
             </p>
           </div>
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+          {/* Yearly chart */}
+=======
+          {/* Year chart */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
           <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
 
             <div className="mb-3.5 flex items-baseline justify-between">
@@ -558,12 +913,30 @@ function Dashboard() {
             </div>
 
             <div className="flex h-[90px] items-end gap-1.5">
+<<<<<<< HEAD
               {stats.monthlyCounts.map((count, i) => {
                 const isFuture = i > stats.currentMonthIndex;
                 const isCurrent = i === stats.currentMonthIndex;
                 const height = isFuture
                   ? 6
                   : count === 0
+=======
+              {stats.monthlyCounts.map(
+                (count, i) => {
+                  const isFuture =
+<<<<<<< HEAD
+                    i >
+                    stats.currentMonthIndex;
+=======
+                    i > stats.currentMonthIndex;
+>>>>>>> 73d4ecf (Websocket integration)
+
+                  const isCurrent =
+                    i ===
+                    stats.currentMonthIndex;
+
+                  const height = isFuture
+>>>>>>> d56a850 (Websocket integration)
                     ? 6
                     : Math.max(8, (count / maxMonthlyCount) * 74);
 
@@ -599,7 +972,20 @@ function Dashboard() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* This month facts */}
+=======
+<<<<<<< HEAD
+        {/* =================================================
+            THIS MONTH
+        ================================================= */}
+=======
+        {/* ===================================================
+            THIS MONTH
+        =================================================== */}
+>>>>>>> 73d4ecf (Websocket integration)
+
+>>>>>>> d56a850 (Websocket integration)
         <div className="rounded-xl border border-[#EFEAE0] bg-white p-4">
           <p className="mb-3 text-[13px] font-medium text-[#0F1B3D]">This month</p>
           <div className="flex flex-col gap-2.5 text-[13px] text-[#5B6584]">
@@ -613,8 +999,18 @@ function Dashboard() {
             {stats.overdueCount > 0 && (
               <div className="flex items-center gap-2.5">
 
+<<<<<<< HEAD
                 <AlertTriangle className="h-4 w-4 text-[#C4432E]" />
                 {stats.overdueCount} overdue right now
+=======
+<<<<<<< HEAD
+                {stats.overdueCount}{" "}
+                overdue right now
+=======
+                {stats.overdueCount} overdue
+                right now
+>>>>>>> 73d4ecf (Websocket integration)
+>>>>>>> d56a850 (Websocket integration)
               </div>
             )}
 
@@ -622,9 +1018,23 @@ function Dashboard() {
               null && (
               <div className="flex items-center gap-2.5">
 
+<<<<<<< HEAD
                 <ArrowUpRight className="h-4 w-4 text-[#1E56CD]" />
                 Fastest payment: {stats.fastestPaymentDays} day
                 {stats.fastestPaymentDays === 1 ? "" : "s"}
+=======
+                Fastest payment:{" "}
+<<<<<<< HEAD
+                {stats.fastestPaymentDays}{" "}
+                day
+=======
+                {stats.fastestPaymentDays} day
+>>>>>>> 73d4ecf (Websocket integration)
+                {stats.fastestPaymentDays ===
+                1
+                  ? ""
+                  : "s"}
+>>>>>>> d56a850 (Websocket integration)
               </div>
             )}
 

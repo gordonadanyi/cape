@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { io, type Socket } from "socket.io-client";
 
 export interface NotificationPayload {
@@ -19,6 +20,16 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL;
 let socket: Socket | null = null;
 
 export function connectNotificationSocket(): Socket | null {
+=======
+import { io, Socket } from "socket.io-client";
+
+const SOCKET_URL =
+  import.meta.env.VITE_API_BASE_URL;
+
+let socket: Socket | null = null;
+
+export function connectNotificationSocket() {
+>>>>>>> d56a850 (Websocket integration)
   const token = localStorage.getItem("token");
 
   if (!token) {
@@ -38,6 +49,7 @@ export function connectNotificationSocket(): Socket | null {
   });
 
   socket.on("connect", () => {
+<<<<<<< HEAD
     console.log("Connected to Cape notifications:", socket?.id);
   });
 
@@ -46,6 +58,13 @@ export function connectNotificationSocket(): Socket | null {
       "Disconnected from Cape notifications:",
       reason,
     );
+=======
+    console.log("Connected to Cape notifications");
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Disconnected from Cape notifications");
+>>>>>>> d56a850 (Websocket integration)
   });
 
   socket.on("connect_error", (error) => {
@@ -58,13 +77,25 @@ export function connectNotificationSocket(): Socket | null {
   return socket;
 }
 
+<<<<<<< HEAD
 export function getNotificationSocket(): Socket | null {
   return socket;
 }
 
 export function disconnectNotificationSocket(): void {
+=======
+export function getNotificationSocket() {
+  return socket;
+}
+
+export function disconnectNotificationSocket() {
+>>>>>>> d56a850 (Websocket integration)
   if (socket) {
     socket.disconnect();
     socket = null;
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> d56a850 (Websocket integration)

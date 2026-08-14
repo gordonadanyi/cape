@@ -8,6 +8,7 @@ import ViewInvoicePage from "./pages/viewInvoices";
 import SettingsPage from "./pages/Settings";
 import ReviewInvoice from "./pages/ReviewInvoice";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -21,6 +22,10 @@ function App() {
       <Route path="/settings/*" element={<SettingsPage />} />
       <Route path="/review/:id" element={<ReviewInvoice />} />
       <Route path="/payment/success" element={<PaymentSuccess />} />
+      <Route
+  path="/notifications"
+  element={<Notifications />}
+/>
     </Routes>
   );
 }
