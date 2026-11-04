@@ -1,6 +1,6 @@
 import type { CustomerSummary } from "../../types/customer";
 
-const currencyFormatter = (currency = "USD") =>
+const currencyFormatter = (currency = "NGN") =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
@@ -13,7 +13,7 @@ export default function CustomerSummaryCards({ summary }: { summary: CustomerSum
       return "N/A";
     }
 
-    return currencyFormatter(summary.currency ?? "USD").format(value);
+    return currencyFormatter(summary.currency ?? "NGN").format(value);
   };
 
   const cards = [
