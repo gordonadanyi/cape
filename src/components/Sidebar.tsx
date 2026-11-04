@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
+  Users,
   Settings,
   Plus,
   LogOut,
@@ -10,6 +11,7 @@ import {
 
 const navItems = [
   { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "Customers", path: "/customers", icon: Users },
   { label: "Invoices", path: "/view-invoices", icon: FileText },
   { label: "Settings", path: "/settings", icon: Settings },
 ];
