@@ -11,6 +11,8 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Notifications from "./pages/Notifications";
 import CustomersPage from "./pages/customers/CustomersPage";
 import CustomerDetailsPage from "./pages/customers/CustomerDetailsPage";
+import NativeInvoiceStudio from "./pages/NativeInvoiceStudio";
+import InvoiceDetailsPage from "./pages/InvoiceDetailsPage";
 import { NotificationProvider } from "./context/NotificationContext";
 
 function App() {
@@ -24,6 +26,8 @@ function App() {
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/customers/:id" element={<CustomerDetailsPage />} />
         <Route path="/new-invoice" element={<NewInvoicePage />} />
+        <Route path="/invoice-studio" element={<NativeInvoiceStudio />} />
+        <Route path="/invoice/:id" element={<InvoiceDetailsPage />} />
         <Route path="/view-invoices" element={<ViewInvoicePage />} />
         <Route path="/settings/*" element={<SettingsPage />} />
         <Route path="/review/:id" element={<ReviewInvoice />} />

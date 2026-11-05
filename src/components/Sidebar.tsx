@@ -63,7 +63,7 @@ export default function Sidebar({ isOpen, onClose }: Props) {
           </div>
 
           <button
-            onClick={() => go("/new-invoice")}
+            onClick={() => go("/invoice-studio")}
             className="mb-4 flex w-full items-center gap-2.5 rounded-xl bg-[#1E56CD] px-3 py-2.5 text-[13px] font-medium text-white transition hover:bg-[#17439E]"
           >
             <Plus className="h-4 w-4" />
