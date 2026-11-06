@@ -7,9 +7,24 @@ import type {
   CustomersQuery,
 } from "../types/customer";
 
-const sanitizeCustomerPayload = <T extends Record<string, unknown>>(payload: T): T => {
-  const sanitized = { ...payload } as Record<string, unknown>;
 
+const sanitizeCustomerPayload = (
+  payload: Record<string, unknown>,
+): Record<string, unknown> => {
+  const sanitized = { ...payload };
+
+  // Convert frontend field names to backend DTO field names
+  if ("phone" in sanitized) {
+    sanitized.phoneNumber = sanitized.phone;
+    delete sanitized.phone;
+  }
+
+  if ("internalNotes" in sanitized) {
+    sanitized.notes = sanitized.internalNotes;
+    delete sanitized.internalNotes;
+  }
+
+  // Remove protected or frontend-only fields
   delete sanitized.userId;
   delete sanitized._id;
   delete sanitized.id;
@@ -17,8 +32,9 @@ const sanitizeCustomerPayload = <T extends Record<string, unknown>>(payload: T):
   delete sanitized.updatedAt;
   delete sanitized.__v;
 
-  return sanitized as T;
+  return sanitized;
 };
+
 
 const toNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value);
@@ -45,7 +61,9 @@ const normalizeCustomer = (raw: Record<string, unknown> = {}): Customer => {
       (raw.companyName as string | undefined) ??
       (raw.company as string | undefined),
     email: raw.email as string | undefined,
-    phone: raw.phone as string | undefined,
+    phone:
+  (raw.phone as string | undefined) ??
+  (raw.phoneNumber as string | undefined),
     billingAddress:
       (raw.billingAddress as string | undefined) ??
       (raw.address as string | undefined),
