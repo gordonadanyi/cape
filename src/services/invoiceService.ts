@@ -1,32 +1,27 @@
 import api from "../api/axios";
 
 export interface InvoiceLineItem {
-  id?: string;
   description: string;
   quantity: number;
   unitPrice: number;
-  lineTotal?: number;
+  taxRate?: number;
+}
+
+export interface InvoiceAdjustment {
+  type: "percentage" | "amount";
+  value: number;
 }
 
 export interface NativeInvoiceDraft {
-  customerId?: string;
-  customerName?: string;
-  customerEmail?: string;
-  customerPhone?: string;
-  billingAddress?: string;
-  companyName?: string;
-  invoiceNumber?: string;
-  issueDate?: string;
-  dueDate?: string;
+  customerId: string;
+  issueDate: string;
+  dueDate: string;
   currency?: string;
+  lineItems: InvoiceLineItem[];
+  discount?: InvoiceAdjustment;
+  tax?: InvoiceAdjustment;
   notes?: string;
-  terms?: string;
-  status?: "draft" | "pending" | "paid";
-  lineItems?: InvoiceLineItem[];
-  discount?: { type?: "percent" | "fixed"; value?: number };
-  tax?: { rate?: number };
-  subtotal?: number;
-  total?: number;
+  termsAndConditions?: string;
 }
 
 async function tryRequest<T>(
@@ -88,34 +83,23 @@ export const invoiceService = {
     throw new Error("Invoice not found.");
   },
 
-  async saveDraft(payload: NativeInvoiceDraft) {
-    return tryRequest<any>(
-      [
-        "/invoices/draft",
-        "/invoice/draft",
-        "/invoices/native/draft",
-        "/invoice/create",
-        "/invoices",
-        "/invoice",
-      ],
-      "post",
-      payload,
-    );
-  },
+ async saveDraft(payload: NativeInvoiceDraft) {
+  const response = await api.post(
+    "/invoices/native",
+    payload
+  );
+
+  return response.data;
+},
 
   async createInvoice(payload: NativeInvoiceDraft) {
-    return tryRequest<any>(
-      [
-        "/invoices/native",
-        "/invoice/create",
-        "/invoices/create",
-        "/invoice",
-        "/invoices",
-      ],
-      "post",
-      payload,
-    );
-  },
+  const response = await api.post(
+    "/invoices/native",
+    payload
+  );
+
+  return response.data;
+},
 
   async updateDraft(id: string, payload: NativeInvoiceDraft) {
     return tryRequest<any>(
