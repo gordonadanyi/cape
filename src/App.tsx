@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Signup from "./pages/signup";
 import Login from "./pages/login";
@@ -26,6 +26,7 @@ function App() {
         <Route path="/customers" element={<CustomersPage />} />
         <Route path="/customers/:id" element={<CustomerDetailsPage />} />
         <Route path="/new-invoice" element={<NewInvoicePage />} />
+        <Route path="/invoice" element={<Navigate to="/view-invoices" replace />} />
         <Route path="/invoice-studio" element={<NativeInvoiceStudio />} />
         <Route path="/invoice/:id" element={<InvoiceDetailsPage />} />
         <Route path="/view-invoices" element={<ViewInvoicePage />} />

@@ -69,21 +69,34 @@ export const invoiceService = {
   },
 
   async getInvoiceById(id: string) {
-    try {
-      const response = await api.get(`/invoices/${id}/details`);
-      return response.data;
-    } catch {
-      const response = await api.get(`/invoices/${id}`);
-      return response.data;
+    const candidates = [
+      `/invoices/${id}/details`,
+      `/invoice/${id}/details`,
+      `/invoices/${id}`,
+      `/invoice/${id}`,
+    ];
+
+    for (const endpoint of candidates) {
+      try {
+        const response = await api.get(endpoint);
+        return response.data;
+      } catch {
+        // try the next compatible backend route
+      }
     }
+
+    throw new Error("Invoice not found.");
   },
 
   async saveDraft(payload: NativeInvoiceDraft) {
     return tryRequest<any>(
       [
         "/invoices/draft",
+        "/invoice/draft",
         "/invoices/native/draft",
+        "/invoice/create",
         "/invoices",
+        "/invoice",
       ],
       "post",
       payload,
@@ -94,7 +107,9 @@ export const invoiceService = {
     return tryRequest<any>(
       [
         "/invoices/native",
+        "/invoice/create",
         "/invoices/create",
+        "/invoice",
         "/invoices",
       ],
       "post",
@@ -104,21 +119,41 @@ export const invoiceService = {
 
   async updateDraft(id: string, payload: NativeInvoiceDraft) {
     return tryRequest<any>(
-      [`/invoices/${id}/draft`, `/invoices/${id}`],
+      [
+        `/invoices/${id}/draft`,
+        `/invoice/${id}/draft`,
+        `/invoices/${id}`,
+        `/invoice/${id}`,
+      ],
       "patch",
       payload,
     );
   },
 
   async sendInvoice(id: string) {
-    return tryRequest<any>([`/invoices/${id}/send`], "post");
+    return tryRequest<any>([
+      `/invoices/${id}/send`,
+      `/invoice/${id}/send`,
+      `/invoices/${id}`,
+      `/invoice/${id}`,
+    ], "post");
   },
 
   async downloadInvoicePdf(id: string) {
-    const response = await api.get(`/invoices/${id}`, {
-      responseType: "blob",
-    });
-    return response.data;
+    const candidates = [`/invoices/${id}`, `/invoice/${id}`];
+
+    for (const endpoint of candidates) {
+      try {
+        const response = await api.get(endpoint, {
+          responseType: "blob",
+        });
+        return response.data;
+      } catch {
+        // continue to the next supported route
+      }
+    }
+
+    throw new Error("Invoice PDF is unavailable.");
   },
 
   async initializeInvoicePayment(invoiceId: string) {
