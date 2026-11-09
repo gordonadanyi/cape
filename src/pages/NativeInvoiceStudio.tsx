@@ -302,16 +302,19 @@ export default function NativeInvoiceStudio() {
         })),
       };
 
-      let response;
-      if (mode === "draft") {
-        if (draftId) {
-          response = await api.patch(`/invoices/${draftId}/draft`, payload);
-        } else {
-          response = await api.post("/invoices/draft", payload).catch(() => api.post("/invoices", payload));
-        }
-      } else {
-        response = await api.post("/invoices/native", payload).catch(() => api.post("/invoices", payload));
-      }
+  let response;
+
+if (mode === "draft" && draftId) {
+  response = await api.patch(
+    `/invoices/${draftId}/draft`,
+    payload
+  );
+} else {
+  response = await api.post(
+    "/invoices/native",
+    payload
+  );
+}
 
       const newId = response?.data?._id ?? response?.data?.id ?? response?.data?.invoice?._id ?? response?.data?.invoiceId ?? draftId;
 
