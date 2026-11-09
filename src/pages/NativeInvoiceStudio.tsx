@@ -276,31 +276,30 @@ export default function NativeInvoiceStudio() {
     setStatus(null);
 
     try {
-      const payload = {
-        customerId: selectedCustomer?._id ?? selectedCustomer?.id,
-        customerName: selectedCustomer?.name ?? selectedCustomer?.customerName ?? "",
-        customerEmail: selectedCustomer?.email ?? "",
-        customerPhone: selectedCustomer?.phone ?? "",
-        billingAddress: selectedCustomer?.billingAddress ?? "",
-        companyName: selectedCustomer?.companyName ?? "",
-        invoiceNumber,
-        issueDate,
-        dueDate,
-        currency,
-        notes,
-        terms,
-        status: mode === "draft" ? "draft" : "pending",
-        subtotal,
-        total,
-        discount: { type: discountType, value: Number(discountValue || 0) },
-        tax: { rate: Number(taxRate || 0) },
-        lineItems: lineItems.map((item) => ({
-          description: item.description,
-          quantity: Number(item.quantity || 0),
-          unitPrice: Number(item.unitPrice || 0),
-          lineTotal: Number(item.quantity || 0) * Number(item.unitPrice || 0),
-        })),
-      };
+     const payload = {
+  customerId: selectedCustomer?._id ?? selectedCustomer?.id,
+  issueDate,
+  dueDate,
+  currency,
+  notes,
+  termsAndConditions: terms,
+
+  discount: {
+    type: discountType === "percent" ? "percentage": "amount",
+    value: Number(discountValue || 0),
+  },
+
+  tax: {
+    type: "percentage",
+    value: Number(taxRate || 0),
+  },
+
+  lineItems: lineItems.map((item) => ({
+    description: item.description,
+    quantity: Number(item.quantity || 0),
+    unitPrice: Number(item.unitPrice || 0),
+  })),
+};
 
   let response;
 
