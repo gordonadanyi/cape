@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const FALLBACK_API_BASE_URL = "https://cape-backend-production.up.railway.app";
+export const FALLBACK_API_BASE_URL = "https://cape-backend-l5un.onrender.com";
 
 export function resolveApiBaseUrl(env: Record<string, string | undefined> = import.meta.env) {
   const configuredBaseUrl = env.VITE_API_BASE_URL?.trim();
